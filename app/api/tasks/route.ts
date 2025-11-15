@@ -8,7 +8,8 @@ export async function GET() {
   try {
     const data = await listRecords<{ title:string; status?:string; assignee?:string }>("Tasks");
     return NextResponse.json({ ok: true, items: data.records }, { status: 200 });
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }

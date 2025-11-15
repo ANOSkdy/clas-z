@@ -2,10 +2,10 @@ import { IS_MOCK, env } from "./env";
 
 const API = "https://api.airtable.com/v0";
 
-type AirtableRecord<T> = {
+type AirtableRecord<TFields> = {
   id: string;
   createdTime?: string;
-  fields: T;
+  fields: TFields;
 };
 
 async function atFetch(path: string, init: RequestInit = {}) {
@@ -25,43 +25,38 @@ async function atFetch(path: string, init: RequestInit = {}) {
   });
 }
 
-export async function listRecords<T = any>(
+export async function listRecords<TFields extends Record<string, unknown> = Record<string, unknown>>(
   table: string,
   params?: Record<string, string>
-) {
+): Promise<{ records: AirtableRecord<TFields>[] }> {
   if (IS_MOCK) {
     const now = new Date().toISOString();
     if (table === "Documents") {
-      return {
-        records: [
-          {
-            id: "doc_mock_1",
-            createdTime: now,
-            fields: {
-              title: "Sample.pdf",
-              blobUrl: "#",
-              size: 123456,
-            } as any,
-          },
-        ] as AirtableRecord<T>[],
+      const record: AirtableRecord<TFields> = {
+        id: "doc_mock_1",
+        createdTime: now,
+        fields: {
+          title: "Sample.pdf",
+          blobUrl: "#",
+          size: 123456,
+        } as TFields,
       };
+      return { records: [record] };
     }
     if (table === "Tasks") {
-      return {
-        records: [
-          {
-            id: "task_mock_1",
-            createdTime: now,
-            fields: {
-              title: "確認: Sample.pdf",
-              status: "open",
-              assignee: "Mock User",
-            } as any,
-          },
-        ] as AirtableRecord<T>[],
+      const record: AirtableRecord<TFields> = {
+        id: "task_mock_1",
+        createdTime: now,
+        fields: {
+          title: "確認: Sample.pdf",
+          status: "open",
+          assignee: "Mock User",
+        } as TFields,
       };
+      return { records: [record] };
     }
-    return { records: [] as AirtableRecord<T>[] };
+    const records: AirtableRecord<TFields>[] = [];
+    return { records };
   }
 
   const qs = params ? "?" + new URLSearchParams(params).toString() : "";
@@ -69,10 +64,13 @@ export async function listRecords<T = any>(
   if (!res.ok) {
     throw new Error(`Airtable list ${table} failed: ${res.status}`);
   }
-  return res.json() as Promise<{ records: AirtableRecord<T>[] }>;
+  return res.json() as Promise<{ records: AirtableRecord<TFields>[] }>;
 }
 
-export async function createRecord<T = any>(table: string, fields: T) {
+export async function createRecord<TFields extends Record<string, unknown> = Record<string, unknown>>(
+  table: string,
+  fields: TFields,
+): Promise<AirtableRecord<TFields>> {
   if (IS_MOCK) {
     return {
       id: "mock_" + Math.random().toString(36).slice(2),
@@ -87,5 +85,5 @@ export async function createRecord<T = any>(table: string, fields: T) {
   if (!res.ok) {
     throw new Error(`Airtable create ${table} failed: ${res.status}`);
   }
-  return res.json() as Promise<AirtableRecord<T>>;
+  return res.json() as Promise<AirtableRecord<TFields>>;
 }

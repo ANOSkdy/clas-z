@@ -9,8 +9,9 @@ export async function GET() {
   try {
     const data = await listRecords<{ title:string; blobUrl:string; size:number }>("Documents");
     return NextResponse.json({ ok: true, items: data.records }, { status: 200 });
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }
 
@@ -26,8 +27,9 @@ export async function POST(req: Request) {
     const input = CreateSchema.parse(body);
     const rec = await createRecord("Documents", input);
     return NextResponse.json({ ok: true, id: rec.id }, { status: 201 });
-  } catch (e: any) {
-    const code = /invalid/i.test(String(e)) ? 400 : 500;
-    return NextResponse.json({ ok: false, error: String(e) }, { status: code });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    const code = /invalid/i.test(message) ? 400 : 500;
+    return NextResponse.json({ ok: false, error: message }, { status: code });
   }
 }
