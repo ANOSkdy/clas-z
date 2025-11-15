@@ -32,8 +32,9 @@ export default function MobileUpload() {
       if (!reg.ok) throw new Error(reg.error || "register failed");
 
       setStep("done"); setMsg("完了しました！");
-    } catch (e:any) {
-      setStep("error"); setMsg(String(e));
+    } catch (error: unknown) {
+      setStep("error");
+      setMsg(error instanceof Error ? error.message : String(error));
     }
   }
 

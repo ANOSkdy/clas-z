@@ -21,7 +21,8 @@ export async function POST(req: Request) {
     const blobUrl = `mock://local/${key}`;
 
     return NextResponse.json({ ok: true, uploadUrl, blobUrl }, { status: 200 });
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, error: String(e) }, { status: 400 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ ok: false, error: message }, { status: 400 });
   }
 }

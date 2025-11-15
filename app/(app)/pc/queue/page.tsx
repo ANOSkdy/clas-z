@@ -14,7 +14,9 @@ export default function QueuePage() {
         const j = await res.json();
         if (!j.ok) throw new Error(j.error || "failed");
         setItems(j.items);
-      } catch (e:any) { setErr(String(e)); }
+      } catch (error: unknown) {
+        setErr(error instanceof Error ? error.message : String(error));
+      }
     })();
   }, []);
 
