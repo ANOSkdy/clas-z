@@ -8,9 +8,9 @@ export async function GET() {
     if (!env.AIRTABLE_API_KEY || !env.AIRTABLE_BASE_ID) {
       return NextResponse.json({ ok: false, reason: 'MISSING_ENV' }, { status: 500 });
     }
-    const url = \https://api.airtable.com/v0/meta/bases/\/tables\;
+    const url = `https://api.airtable.com/v0/meta/bases/${encodeURIComponent(env.AIRTABLE_BASE_ID)}/tables`;
     const res = await fetch(url, {
-      headers: { Authorization: \Bearer \\ },
+      headers: { Authorization: `Bearer ${env.AIRTABLE_API_KEY}` },
     });
 
     if (!res.ok) {
@@ -23,7 +23,8 @@ export async function GET() {
     const missing = required.filter(r => !tableNames.includes(r));
 
     return NextResponse.json({ ok: missing.length === 0, tables: tableNames, missing }, { status: 200 });
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, reason: 'UNHANDLED', error: String(e?.message ?? e) }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ ok: false, reason: 'UNHANDLED', error: message }, { status: 500 });
   }
 }
