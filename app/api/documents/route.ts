@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const data = await listRecords<{ title:string; blobUrl:string; size:number }>("Documents");
+    const data = await listRecords("Documents");
     return NextResponse.json({ ok: true, items: data.records }, { status: 200 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
