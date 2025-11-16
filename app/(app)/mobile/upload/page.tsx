@@ -27,6 +27,9 @@ const STATUS_LABEL: Record<UploadStatus, string> = {
   canceled: "キャンセル",
 };
 
+const DEFAULT_COMPANY_ID = "demo-company";
+const DEFAULT_USER_ID = "demo-user";
+
 type QueueItem = {
   id: string;
   file: File;
@@ -38,6 +41,7 @@ type QueueItem = {
   aiError?: string;
   blobUrl?: string;
   documentId?: string;
+  correlationId: string;
 };
 
 export default function MobileUploadPage() {
@@ -92,12 +96,34 @@ function Uploader() {
     setLiveMessage(message);
   }, []);
 
+  const postUploadEvent = useCallback((type: string, correlationId: string, payload: Record<string, unknown>) => {
+    const body = {
+      type,
+      source: "/mobile/upload",
+      correlationId,
+      payload: { ...payload, companyId: DEFAULT_COMPANY_ID },
+    };
+    void fetch("/api/events", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-correlation-id": correlationId,
+      },
+      body: JSON.stringify(body),
+      keepalive: true,
+    }).catch(() => {});
+  }, []);
+
   const startProcessing = useCallback(
     (item: QueueItem) => {
-      const correlationId = crypto.randomUUID();
+      const correlationId = item.correlationId;
       const controller = new AbortController();
       controllersRef.current.set(item.id, controller);
       updateItem(item.id, (prev) => ({ ...prev, status: "uploading", progress: 1, error: undefined }));
+      postUploadEvent("upload.started", correlationId, {
+        fileName: item.file.name,
+        size: item.file.size,
+      });
       appendLiveMessage(`${item.file.name} のアップロードを開始しました。`);
 
       const uploadWithProgress = (uploadUrl: string) =>
@@ -163,8 +189,8 @@ function Uploader() {
               "x-correlation-id": correlationId,
             },
             body: JSON.stringify({
-              companyId: "demo-company",
-              uploaderUserId: "demo-user",
+              companyId: DEFAULT_COMPANY_ID,
+              uploaderUserId: DEFAULT_USER_ID,
               blobUrl,
               meta: {
                 name: item.file.name,
@@ -220,6 +246,12 @@ function Uploader() {
                   : "分類に失敗しました",
             }));
           }
+
+          postUploadEvent("upload.completed", correlationId, {
+            documentId,
+            fileName: item.file.name,
+            size: item.file.size,
+          });
         } catch (error: unknown) {
           if (controller.signal.aborted) {
             updateItem(item.id, (prev) => ({ ...prev, status: "canceled", error: "アップロードをキャンセルしました" }));
@@ -231,6 +263,11 @@ function Uploader() {
             status: "error",
             error: error instanceof Error ? error.message : "不明なエラーが発生しました",
           }));
+          postUploadEvent("upload.failed", correlationId, {
+            fileName: item.file.name,
+            size: item.file.size,
+            error: error instanceof Error ? error.message : "unknown",
+          });
           appendLiveMessage(`${item.file.name} でエラーが発生しました。`);
         } finally {
           controllersRef.current.delete(item.id);
@@ -274,12 +311,18 @@ function Uploader() {
         }
 
         const previewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined;
+        const correlationId = crypto.randomUUID();
+        postUploadEvent("upload.requested", correlationId, {
+          fileName: file.name,
+          size: file.size,
+        });
         newItems.push({
           id: crypto.randomUUID(),
           file,
           previewUrl,
           status: "ready",
           progress: 0,
+          correlationId,
         });
       }
 

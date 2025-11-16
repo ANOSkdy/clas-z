@@ -10,12 +10,13 @@ const ParamsSchema = z.object({
   documentId: z.string().min(1, "documentId is required"),
 });
 
-type RouteContext = { params: { documentId: string } | Promise<{ documentId: string }> };
-
-export async function GET(_req: Request, context: RouteContext) {
+export async function GET(req: Request) {
   const correlationId = randomUUID();
   try {
-    const { documentId } = ParamsSchema.parse(await context.params);
+    const url = new URL(req.url);
+    const segments = url.pathname.split("/").filter(Boolean);
+    const fromPath = segments.at(-1);
+    const { documentId } = ParamsSchema.parse({ documentId: fromPath ?? "" });
 
     const result = await listRecords<DocumentReviewFields>(DOCUMENTS_TABLE, {
       filterByFormula: `RECORD_ID()='${documentId}'`,

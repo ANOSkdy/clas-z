@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { z } from "zod";
-import { updateRecord } from "@/lib/airtable";
+import { getRecord, updateRecord } from "@/lib/airtable";
+import { getCurrentContext } from "@/lib/auth";
+import { trackEvent } from "@/lib/events";
+import { requestRatingRecompute } from "@/lib/rating";
 import { ConfirmRequestSchema } from "@/lib/schemas/review";
 import { DOCUMENTS_TABLE } from "../../utils";
 
@@ -11,15 +14,20 @@ const ParamsSchema = z.object({
 
 export const runtime = "nodejs";
 
-type RouteContext = { params: { documentId: string } | Promise<{ documentId: string }> };
-
-export async function POST(req: Request, context: RouteContext) {
+export async function POST(req: Request) {
   const correlationId = randomUUID();
   try {
-    const { documentId } = ParamsSchema.parse(await context.params);
+    const url = new URL(req.url);
+    const segments = url.pathname.split("/").filter(Boolean);
+    const fromPath = segments.at(-2);
+    const { documentId } = ParamsSchema.parse({ documentId: fromPath ?? "" });
     const body = req.headers.get("content-length") ? await req.json() : undefined;
     const payload = ConfirmRequestSchema.parse(body ?? {});
     const now = new Date().toISOString();
+    const docRecord = await getRecord(DOCUMENTS_TABLE, documentId);
+    const companyId =
+      typeof docRecord.fields.CompanyId === "string" ? docRecord.fields.CompanyId : null;
+    const authContext = await getCurrentContext(req);
 
     await updateRecord(DOCUMENTS_TABLE, documentId, {
       Status: "confirmed",
@@ -27,6 +35,19 @@ export async function POST(req: Request, context: RouteContext) {
       RejectReason: null,
       Note: payload.note ?? null,
     });
+
+    if (companyId) {
+      await trackEvent({
+        companyId,
+        userId: authContext.userId ?? undefined,
+        type: "review.confirmed",
+        source: "/api/review/[documentId]/confirm",
+        correlationId,
+        payload: { documentId },
+      });
+    }
+
+    requestRatingRecompute({ scope: "document", documentId, reason: "review.confirmed" }, correlationId);
 
     return NextResponse.json(
       { ok: true, status: "confirmed", correlationId },
@@ -42,7 +63,7 @@ export async function POST(req: Request, context: RouteContext) {
           },
           correlationId,
         },
-        { status: 400 },
+        { status: 400, headers: { "x-correlation-id": correlationId } },
       );
     }
 
@@ -55,7 +76,7 @@ export async function POST(req: Request, context: RouteContext) {
         },
         correlationId,
       },
-      { status: 500 },
+      { status: 500, headers: { "x-correlation-id": correlationId } },
     );
   }
 }

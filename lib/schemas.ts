@@ -45,4 +45,8 @@ export type DocumentRecordFields = {
   Meta?: Record<string, unknown>;
   Status: DocumentStatus;
   LatestAiLabel?: string;
+  LatestAiConfidence?: number;
+  UploadedAt?: string;
+  ClassifiedAt?: string;
+  UpdatedAt?: string;
 };
