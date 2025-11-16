@@ -1,123 +1,112 @@
-import { IS_MOCK, env } from "./env";
-
-const API = "https://api.airtable.com/v0";
+import { env } from "./env";
 
 export type AirtableRecord<TFields extends Record<string, unknown>> = {
   id: string;
-  createdTime?: string;
+  createdTime: string;
   fields: TFields;
 };
 
-export type DocumentFields = {
-  title: string;
-  blobUrl: string;
-  size: number;
+export type AirtableListResponse<TFields extends Record<string, unknown>> = {
+  records: AirtableRecord<TFields>[];
 };
 
-export type TaskFields = {
-  title: string;
-  status?: string;
-  assignee?: string;
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
+
+const DEFAULT_OPTIONS = {
+  maxRetries: 3,
+  backoffMs: 350,
 };
 
-type TableFieldMap = {
-  Documents: DocumentFields;
-  Tasks: TaskFields;
+type RequestOptions = {
+  maxRetries?: number;
+  backoffMs?: number;
 };
 
-type GenericFields = Record<string, unknown>;
+async function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
-async function atFetch(path: string, init: RequestInit = {}) {
-  if (!env.AIRTABLE_BASE_ID || !env.AIRTABLE_API_KEY) {
-    throw new Error("Airtable env is missing");
-  }
+async function airtableFetch(
+  path: string,
+  init: RequestInit,
+  attempt = 0,
+  options: RequestOptions = DEFAULT_OPTIONS,
+): Promise<Response> {
+  const url = `${env.AIRTABLE_ENDPOINT_URL.replace(/\/$/, "")}/${env.AIRTABLE_BASE_ID}/${path}`;
+  const headers: HeadersInit = {
+    Authorization: `Bearer ${env.AIRTABLE_API_KEY}`,
+    "Content-Type": "application/json",
+    ...init.headers,
+  };
 
-  const url = `${API}/${env.AIRTABLE_BASE_ID}/${encodeURIComponent(path)}`;
-  return fetch(url, {
+  const response = await fetch(url, {
     ...init,
-    headers: {
-      "Authorization": `Bearer ${env.AIRTABLE_API_KEY}`,
-      "Content-Type": "application/json",
-      ...(init.headers || {}),
-    },
+    headers,
     cache: "no-store",
   });
-}
 
-export async function listRecords<TName extends keyof TableFieldMap>(
-  table: TName,
-  params?: Record<string, string>,
-): Promise<{ records: AirtableRecord<TableFieldMap[TName]>[] }>;
-export async function listRecords<TFields extends GenericFields>(
-  table: string,
-  params?: Record<string, string>,
-): Promise<{ records: AirtableRecord<TFields>[] }>;
-export async function listRecords(
-  table: string,
-  params?: Record<string, string>,
-): Promise<{ records: AirtableRecord<GenericFields>[] }> {
-  if (IS_MOCK) {
-    const now = new Date().toISOString();
-    if (table === "Documents") {
-      const record = {
-        id: "doc_mock_1",
-        createdTime: now,
-        fields: {
-          title: "Sample.pdf",
-          blobUrl: "#",
-          size: 123456,
-        },
-      } satisfies AirtableRecord<DocumentFields>;
-      return { records: [record] } as { records: AirtableRecord<GenericFields>[] };
-    }
-    if (table === "Tasks") {
-      const record = {
-        id: "task_mock_1",
-        createdTime: now,
-        fields: {
-          title: "確認: Sample.pdf",
-          status: "open",
-          assignee: "Mock User",
-        },
-      } satisfies AirtableRecord<TaskFields>;
-      return { records: [record] } as { records: AirtableRecord<GenericFields>[] };
-    }
-    return { records: [] };
+  if (RETRYABLE_STATUS.has(response.status) && attempt < (options.maxRetries ?? DEFAULT_OPTIONS.maxRetries)) {
+    const wait = (options.backoffMs ?? DEFAULT_OPTIONS.backoffMs) * (attempt + 1);
+    await delay(wait);
+    return airtableFetch(path, init, attempt + 1, options);
   }
 
-  const qs = params ? "?" + new URLSearchParams(params).toString() : "";
-  const res = await atFetch(`${table}${qs}`, { method: "GET" });
-  if (!res.ok) {
-    throw new Error(`Airtable list ${table} failed: ${res.status}`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Airtable API error (${response.status}): ${text}`);
   }
-  return res.json() as Promise<{ records: AirtableRecord<GenericFields>[] }>;
+
+  return response;
 }
 
-export async function createRecord<TName extends keyof TableFieldMap>(
-  table: TName,
-  fields: TableFieldMap[TName],
-): Promise<AirtableRecord<TableFieldMap[TName]>>;
-export async function createRecord<TFields extends GenericFields>(
+function toQuery(params?: Record<string, string | number | undefined>): string {
+  if (!params) return "";
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (typeof value === "undefined" || value === null) return;
+    search.append(key, String(value));
+  });
+  const qs = search.toString();
+  return qs ? `?${qs}` : "";
+}
+
+export async function getRecords<TFields extends Record<string, unknown>>(
+  table: string,
+  params?: {
+    view?: string;
+    filterByFormula?: string;
+    maxRecords?: number;
+  },
+  options?: RequestOptions,
+): Promise<AirtableRecord<TFields>[]> {
+  const query = toQuery({
+    view: params?.view,
+    filterByFormula: params?.filterByFormula,
+    maxRecords: params?.maxRecords,
+  });
+  const response = await airtableFetch(
+    `${encodeURIComponent(table)}${query}`,
+    { method: "GET" },
+    0,
+    options,
+  );
+  const data = (await response.json()) as AirtableListResponse<TFields>;
+  return data.records;
+}
+
+export async function createRecord<TFields extends Record<string, unknown>>(
   table: string,
   fields: TFields,
-): Promise<AirtableRecord<TFields>>;
-export async function createRecord(
-  table: string,
-  fields: GenericFields,
-): Promise<AirtableRecord<GenericFields>> {
-  if (IS_MOCK) {
-    return {
-      id: "mock_" + Math.random().toString(36).slice(2),
-      createdTime: new Date().toISOString(),
-      fields,
-    };
-  }
-  const res = await atFetch(table, {
-    method: "POST",
-    body: JSON.stringify({ fields }),
-  });
-  if (!res.ok) {
-    throw new Error(`Airtable create ${table} failed: ${res.status}`);
-  }
-  return res.json() as Promise<AirtableRecord<GenericFields>>;
+  options?: RequestOptions,
+): Promise<AirtableRecord<TFields>> {
+  const response = await airtableFetch(
+    encodeURIComponent(table),
+    {
+      method: "POST",
+      body: JSON.stringify({ fields }),
+    },
+    0,
+    options,
+  );
+  return (await response.json()) as AirtableRecord<TFields>;
 }
