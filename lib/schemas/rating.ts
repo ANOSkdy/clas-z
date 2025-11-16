@@ -43,7 +43,7 @@ export const Events = z.object({
   type: z.string(),
   source: z.string(),
   correlationId: z.string().uuid().optional(),
-  payload: z.record(z.any()).optional(),
+  payload: z.record(z.string(), z.any()).optional(),
 });
 export type Events = z.infer<typeof Events>;
 

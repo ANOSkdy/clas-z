@@ -32,7 +32,7 @@ type RatingResponse = {
 };
 
 async function loadRatingData(): Promise<RatingResponse> {
-  const headerStore = headers();
+  const headerStore = await headers();
   const invite = headerStore.get("x-clas-invite");
   const incomingCorrelation = headerStore.get("x-correlation-id");
   const correlationId = incomingCorrelation ?? randomUUID();

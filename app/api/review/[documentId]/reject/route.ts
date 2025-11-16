@@ -12,19 +12,21 @@ const ParamsSchema = z.object({
   documentId: z.string().min(1, "documentId is required"),
 });
 
-type RouteContext = { params: { documentId: string } | Promise<{ documentId: string }> };
-
 export const runtime = "nodejs";
 
-export async function POST(req: Request, context: RouteContext) {
+export async function POST(req: Request) {
   const correlationId = randomUUID();
   try {
-    const { documentId } = ParamsSchema.parse(await context.params);
+    const url = new URL(req.url);
+    const segments = url.pathname.split("/").filter(Boolean);
+    const fromPath = segments.at(-2);
+    const { documentId } = ParamsSchema.parse({ documentId: fromPath ?? "" });
     const body = await req.json();
     const decision = RejectRequestSchema.parse(body);
     const now = new Date().toISOString();
     const docRecord = await getRecord(DOCUMENTS_TABLE, documentId);
-    const companyId = docRecord.fields.CompanyId ?? null;
+    const companyId =
+      typeof docRecord.fields.CompanyId === "string" ? docRecord.fields.CompanyId : null;
     const authContext = await getCurrentContext(req);
 
     await updateRecord(DOCUMENTS_TABLE, documentId, {

@@ -14,17 +14,19 @@ const ParamsSchema = z.object({
 
 export const runtime = "nodejs";
 
-type RouteContext = { params: { documentId: string } | Promise<{ documentId: string }> };
-
-export async function POST(req: Request, context: RouteContext) {
+export async function POST(req: Request) {
   const correlationId = randomUUID();
   try {
-    const { documentId } = ParamsSchema.parse(await context.params);
+    const url = new URL(req.url);
+    const segments = url.pathname.split("/").filter(Boolean);
+    const fromPath = segments.at(-2);
+    const { documentId } = ParamsSchema.parse({ documentId: fromPath ?? "" });
     const body = req.headers.get("content-length") ? await req.json() : undefined;
     const payload = ConfirmRequestSchema.parse(body ?? {});
     const now = new Date().toISOString();
     const docRecord = await getRecord(DOCUMENTS_TABLE, documentId);
-    const companyId = docRecord.fields.CompanyId ?? null;
+    const companyId =
+      typeof docRecord.fields.CompanyId === "string" ? docRecord.fields.CompanyId : null;
     const authContext = await getCurrentContext(req);
 
     await updateRecord(DOCUMENTS_TABLE, documentId, {
