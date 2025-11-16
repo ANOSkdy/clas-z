@@ -25,12 +25,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               </Link>
               <p className="text-sm text-[color:var(--color-text-muted)]">会計書類の安心ルート</p>
             </div>
-            <nav aria-label="グローバルナビ" className="flex items-center gap-4 text-sm">
+            <nav aria-label="グローバルナビ" className="flex flex-wrap items-center gap-4 text-sm">
               <Link href="/mobile" className="underline-offset-4 hover:underline">
                 モバイル
               </Link>
               <Link href="/pc" className="underline-offset-4 hover:underline">
                 PC レビュー
+              </Link>
+              <Link href="/customer/edit" className="underline-offset-4 hover:underline">
+                プロフィール
+              </Link>
+              <Link href="/settings/company" className="underline-offset-4 hover:underline">
+                会社設定
               </Link>
               <Link href="/health" className="underline-offset-4 hover:underline">
                 ヘルスチェック
