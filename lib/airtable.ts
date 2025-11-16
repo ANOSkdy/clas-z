@@ -147,6 +147,29 @@ export async function createRecord<TFields extends Record<string, unknown>>(
   return (await response.json()) as AirtableRecord<TFields>;
 }
 
+export async function createRecordsBatch<TFields extends Record<string, unknown>>(
+  table: string,
+  records: TFields[],
+  options?: RequestOptions,
+): Promise<AirtableRecord<TFields>[]> {
+  const chunks: AirtableRecord<TFields>[] = [];
+  for (let i = 0; i < records.length; i += 10) {
+    const slice = records.slice(i, i + 10);
+    const response = await airtableFetch(
+      encodeURIComponent(table),
+      {
+        method: "POST",
+        body: JSON.stringify({ records: slice.map((fields) => ({ fields })) }),
+      },
+      0,
+      options,
+    );
+    const data = (await response.json()) as AirtableListResponse<TFields>;
+    chunks.push(...data.records);
+  }
+  return chunks;
+}
+
 export async function listRecords<TFields extends Record<string, unknown>>(
   table: string,
   params?: {
@@ -182,6 +205,36 @@ export async function updateRecord<TFields extends Record<string, unknown>>(
       method: "PATCH",
       body: JSON.stringify({ fields }),
     },
+    0,
+    options,
+  );
+  return (await response.json()) as AirtableRecord<TFields>;
+}
+
+export async function deleteRecords(
+  table: string,
+  ids: string[],
+  options?: RequestOptions,
+): Promise<void> {
+  for (let i = 0; i < ids.length; i += 10) {
+    const slice = ids.slice(i, i + 10);
+    await airtableFetch(
+      `${encodeURIComponent(table)}?${slice.map((id) => `records[]=${encodeURIComponent(id)}`).join("&")}`,
+      { method: "DELETE" },
+      0,
+      options,
+    );
+  }
+}
+
+export async function getRecord<TFields extends Record<string, unknown>>(
+  table: string,
+  id: string,
+  options?: RequestOptions,
+): Promise<AirtableRecord<TFields>> {
+  const response = await airtableFetch(
+    `${encodeURIComponent(table)}/${encodeURIComponent(id)}`,
+    { method: "GET" },
     0,
     options,
   );

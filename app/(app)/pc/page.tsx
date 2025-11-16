@@ -28,6 +28,12 @@ export default function PcHome() {
           PC Review ワークスペースへ
         </Link>
       </div>
+      <div className="card space-y-3" aria-label="試算表導線">
+        <p className="text-sm text-[color:var(--color-text-muted)]">P4 TB で試算表の取り込みから送付までを確認できます</p>
+        <Link href="/pc/trial_balance" className="btn-secondary inline-flex items-center justify-center text-sm">
+          Trial Balance ワークスペースへ
+        </Link>
+      </div>
     </section>
   );
 }

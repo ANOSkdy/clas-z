@@ -140,6 +140,36 @@ button:disabled {
   transform: none;
 }
 
+.input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-8);
+  padding: 0.65rem 0.75rem;
+  background: var(--color-surface);
+  min-height: 44px;
+}
+
+.input:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.chip {
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  padding: 0.35rem 0.8rem;
+  font-size: 0.85rem;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  min-height: 32px;
+}
+
+.chip-active {
+  border-color: var(--color-primary-plum-700);
+  color: var(--color-primary-plum-800);
+  background: rgba(143, 93, 193, 0.12);
+}
+
 .mobile-frame {
   display: grid;
   grid-template-rows: 1fr auto;
