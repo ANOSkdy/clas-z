@@ -1,37 +1,45 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { z } from "zod";
-import { updateRecord } from "@/lib/airtable";
-import { ConfirmRequestSchema } from "@/lib/schemas/review";
-import { DOCUMENTS_TABLE } from "../../utils";
+import { listRecords } from "@/lib/airtable";
+import { mapRecordToDetail, REVIEW_REQUESTED_FIELDS, DOCUMENTS_TABLE, type DocumentReviewFields } from "../utils";
+
+export const runtime = "nodejs";
 
 const ParamsSchema = z.object({
   documentId: z.string().min(1, "documentId is required"),
 });
 
-export const runtime = "nodejs";
-
 type RouteContext = { params: { documentId: string } | Promise<{ documentId: string }> };
 
-export async function POST(req: Request, context: RouteContext) {
+export async function GET(_req: Request, context: RouteContext) {
   const correlationId = randomUUID();
   try {
     const { documentId } = ParamsSchema.parse(await context.params);
-    const body = req.headers.get("content-length") ? await req.json() : undefined;
-    const payload = ConfirmRequestSchema.parse(body ?? {});
-    const now = new Date().toISOString();
 
-    await updateRecord(DOCUMENTS_TABLE, documentId, {
-      Status: "confirmed",
-      UpdatedAt: now,
-      RejectReason: null,
-      Note: payload.note ?? null,
+    const result = await listRecords<DocumentReviewFields>(DOCUMENTS_TABLE, {
+      filterByFormula: `RECORD_ID()='${documentId}'`,
+      maxRecords: 1,
+      fields: [...REVIEW_REQUESTED_FIELDS],
     });
 
-    return NextResponse.json(
-      { ok: true, status: "confirmed", correlationId },
-      { headers: { "x-correlation-id": correlationId } },
-    );
+    const record = result.records[0];
+    if (!record) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "NOT_FOUND",
+            message: "Document not found",
+          },
+          correlationId,
+        },
+        { status: 404 },
+      );
+    }
+
+    const detail = mapRecordToDetail(record);
+
+    return NextResponse.json(detail, { headers: { "x-correlation-id": correlationId } });
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

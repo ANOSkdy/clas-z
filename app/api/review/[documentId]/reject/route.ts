@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { z } from "zod";
-import { ReviewDecisionSchema } from "@/lib/schemas";
+import { updateRecord } from "@/lib/airtable";
+import { RejectRequestSchema } from "@/lib/schemas/review";
+import { DOCUMENTS_TABLE } from "../../utils";
 
 const ParamsSchema = z.object({
-  documentId: z.string().uuid("documentId must be UUID"),
+  documentId: z.string().min(1, "documentId is required"),
 });
 
 type RouteContext = { params: { documentId: string } | Promise<{ documentId: string }> };
@@ -16,9 +18,19 @@ export async function POST(req: Request, context: RouteContext) {
   try {
     const { documentId } = ParamsSchema.parse(await context.params);
     const body = await req.json();
-    const decision = ReviewDecisionSchema.parse(body);
-    // TODO: Airtable documents を rejected に更新
-    return NextResponse.json({ ok: true, documentId, reason: decision.reason, correlationId }, { status: 200 });
+    const decision = RejectRequestSchema.parse(body);
+    const now = new Date().toISOString();
+
+    await updateRecord(DOCUMENTS_TABLE, documentId, {
+      Status: "rejected",
+      RejectReason: decision.reason,
+      UpdatedAt: now,
+    });
+
+    return NextResponse.json(
+      { ok: true, status: "rejected", correlationId },
+      { headers: { "x-correlation-id": correlationId } },
+    );
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

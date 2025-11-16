@@ -38,11 +38,6 @@ export const ClassifyResponseSchema = z.object({
 });
 export type ClassifyResponse = z.infer<typeof ClassifyResponseSchema>;
 
-export const ReviewDecisionSchema = z.object({
-  reason: z.string().min(1, "理由は必須です"),
-});
-export type ReviewDecisionInput = z.infer<typeof ReviewDecisionSchema>;
-
 export type DocumentRecordFields = {
   CompanyId: string;
   UploaderUserId: string;
