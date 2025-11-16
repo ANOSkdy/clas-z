@@ -1,8 +1,15 @@
-import { randomUUID } from "crypto";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { env } from "@/lib/env";
-import type { ReviewListItem } from "@/lib/schemas/review";
+import { listRecords } from "@/lib/airtable";
+import { ReviewListQuerySchema, type ReviewListItem, type ReviewListQuery } from "@/lib/schemas/review";
+import {
+  DOCUMENTS_TABLE,
+  REVIEW_REQUESTED_FIELDS,
+  SORT_FIELD_MAP,
+  buildFilterFormula,
+  mapRecordToListItem,
+  type DocumentReviewFields,
+} from "@/app/api/review/utils";
 import ReviewGrid from "./_components/ReviewGrid";
 
 type PageSearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -16,6 +23,8 @@ type SearchState = {
   id?: string;
 };
 
+const PAGE_SIZE = 50;
+
 export const metadata: Metadata = {
   title: "PC Review",
 };
@@ -27,45 +36,51 @@ const STATUS_OPTIONS = [
   { value: "rejected", label: "差戻し" },
 ];
 
-function resolveSearchParams(params: SearchState) {
-  return {
-    q: typeof params.q === "string" ? params.q : "",
-    status: typeof params.status === "string" ? params.status : "pending",
-    companyId: typeof params.companyId === "string" ? params.companyId : "",
-    sort: typeof params.sort === "string" ? params.sort : "createdAt",
-    order: typeof params.order === "string" ? params.order : "desc",
-    id: typeof params.id === "string" ? params.id : undefined,
-  };
+function resolveReviewQuery(params: SearchState): ReviewListQuery {
+  const parsed = ReviewListQuerySchema.safeParse({
+    q: typeof params.q === "string" && params.q ? params.q : undefined,
+    status: typeof params.status === "string" ? params.status : undefined,
+    companyId: typeof params.companyId === "string" && params.companyId ? params.companyId : undefined,
+    sort: typeof params.sort === "string" ? params.sort : undefined,
+    order: typeof params.order === "string" ? params.order : undefined,
+    limit: PAGE_SIZE,
+  });
+  if (parsed.success) {
+    return parsed.data;
+  }
+  return ReviewListQuerySchema.parse({ limit: PAGE_SIZE });
 }
 
-async function getInitialData(search: ReturnType<typeof resolveSearchParams>) {
-  const searchParams = new URLSearchParams();
-  if (search.q) searchParams.set("q", search.q);
-  if (search.status) searchParams.set("status", search.status);
-  if (search.companyId) searchParams.set("companyId", search.companyId);
-  if (search.sort) searchParams.set("sort", search.sort);
-  if (search.order) searchParams.set("order", search.order);
-  searchParams.set("limit", "50");
+function resolveSelectedId(params: SearchState) {
+  return typeof params.id === "string" ? params.id : undefined;
+}
 
-  const url = `${env.APP_BASE_URL.replace(/\/$/, "")}/api/review?${searchParams.toString()}`;
+async function getInitialData(
+  query: ReviewListQuery,
+): Promise<{ items: ReviewListItem[]; cursor?: string | undefined }> {
   try {
-    const res = await fetch(url, {
-      headers: { "x-correlation-id": randomUUID() },
-      cache: "no-store",
+    const filterByFormula = buildFilterFormula(query);
+    const sortField = SORT_FIELD_MAP[query.sort] ?? SORT_FIELD_MAP.createdAt;
+    const airtableResponse = await listRecords<DocumentReviewFields>(DOCUMENTS_TABLE, {
+      filterByFormula,
+      pageSize: query.limit,
+      sort: [{ field: sortField, direction: query.order }],
+      fields: [...REVIEW_REQUESTED_FIELDS],
     });
-    if (!res.ok) {
-      return { items: [], cursor: undefined };
-    }
-    const json = (await res.json()) as { items: ReviewListItem[]; nextCursor?: string };
-    return { items: json.items, cursor: json.nextCursor };
+    return {
+      items: airtableResponse.records.map(mapRecordToListItem),
+      cursor: airtableResponse.offset,
+    };
   } catch {
     return { items: [], cursor: undefined };
   }
 }
 
 export default async function PcReviewPage({ searchParams }: { searchParams: PageSearchParams }) {
-  const resolved = resolveSearchParams(await searchParams);
-  const initial = await getInitialData(resolved);
+  const params = await searchParams;
+  const query = resolveReviewQuery(params);
+  const selectedId = resolveSelectedId(params);
+  const initial = await getInitialData(query);
 
   return (
     <section className="space-y-6" aria-labelledby="pc-review-heading">
@@ -90,7 +105,7 @@ export default async function PcReviewPage({ searchParams }: { searchParams: Pag
             <input
               type="search"
               name="q"
-              defaultValue={resolved.q}
+              defaultValue={query.q ?? ""}
               className="mt-1 w-full rounded border border-[color:var(--color-border)] bg-transparent px-3 py-2 text-base"
               placeholder="ファイル名 / AI ラベル"
             />
@@ -99,7 +114,7 @@ export default async function PcReviewPage({ searchParams }: { searchParams: Pag
             ステータス
             <select
               name="status"
-              defaultValue={resolved.status}
+              defaultValue={query.status}
               className="mt-1 w-full rounded border border-[color:var(--color-border)] bg-transparent px-3 py-2 text-base"
             >
               {STATUS_OPTIONS.map((option) => (
@@ -114,7 +129,7 @@ export default async function PcReviewPage({ searchParams }: { searchParams: Pag
             <input
               type="text"
               name="companyId"
-              defaultValue={resolved.companyId}
+              defaultValue={query.companyId ?? ""}
               className="mt-1 w-full rounded border border-[color:var(--color-border)] bg-transparent px-3 py-2 text-base"
               placeholder="company_xxx"
             />
@@ -130,17 +145,17 @@ export default async function PcReviewPage({ searchParams }: { searchParams: Pag
         </div>
       </form>
       <ReviewGrid
-        key={JSON.stringify(resolved)}
+        key={JSON.stringify({ query, selectedId })}
         initialItems={initial.items}
         initialCursor={initial.cursor}
         query={{
-          q: resolved.q,
-          status: resolved.status,
-          companyId: resolved.companyId,
-          sort: resolved.sort,
-          order: resolved.order,
+          q: query.q,
+          status: query.status,
+          companyId: query.companyId,
+          sort: query.sort,
+          order: query.order,
         }}
-        initialSelectedId={resolved.id}
+        initialSelectedId={selectedId}
       />
     </section>
   );
