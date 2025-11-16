@@ -17,22 +17,44 @@ const EnvSchema = z.object({
   BLOB_READ_WRITE_TOKEN: z.string().min(1, "BLOB_READ_WRITE_TOKEN が必要です"),
 });
 
-const parsed = EnvSchema.safeParse({
-  NODE_ENV: process.env.NODE_ENV,
-  APP_BASE_URL: process.env.APP_BASE_URL,
-  AIRTABLE_API_KEY: process.env.AIRTABLE_API_KEY,
-  AIRTABLE_BASE_ID: process.env.AIRTABLE_BASE_ID,
-  AIRTABLE_ENDPOINT_URL: process.env.AIRTABLE_ENDPOINT_URL ?? "https://api.airtable.com/v0",
-  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
-  BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
-});
+type EnvShape = z.infer<typeof EnvSchema>;
 
-if (!parsed.success) {
-  const formatted = parsed.error.issues
-    .map((issue) => `${issue.path.join(".") || "env"}: ${issue.message}`)
-    .join("\n");
-  throw new Error(`環境変数の検証に失敗しました:\n${formatted}`);
+let cachedEnv: EnvShape | null = null;
+
+function loadEnv(): EnvShape {
+  if (cachedEnv) return cachedEnv;
+
+  const parsed = EnvSchema.safeParse({
+    NODE_ENV: process.env.NODE_ENV,
+    APP_BASE_URL: process.env.APP_BASE_URL,
+    AIRTABLE_API_KEY: process.env.AIRTABLE_API_KEY,
+    AIRTABLE_BASE_ID: process.env.AIRTABLE_BASE_ID,
+    AIRTABLE_ENDPOINT_URL: process.env.AIRTABLE_ENDPOINT_URL ?? "https://api.airtable.com/v0",
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+    BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
+  });
+
+  if (!parsed.success) {
+    const formatted = parsed.error.issues
+      .map((issue) => `${issue.path.join(".") || "env"}: ${issue.message}`)
+      .join("\n");
+    throw new Error(`環境変数の検証に失敗しました:\n${formatted}`);
+  }
+
+  cachedEnv = parsed.data;
+  return cachedEnv;
 }
 
-export const env = parsed.data;
-export type AppEnv = typeof env;
+export function getEnv(): EnvShape {
+  return loadEnv();
+}
+
+type EnvKey = keyof EnvShape;
+
+export const env = new Proxy({} as EnvShape, {
+  get(_target, prop: string) {
+    return loadEnv()[prop as EnvKey];
+  },
+});
+
+export type AppEnv = EnvShape;

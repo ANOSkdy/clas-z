@@ -22,8 +22,6 @@ type RequestOptions = {
   backoffMs?: number;
 };
 
-const baseUrl = env.AIRTABLE_ENDPOINT_URL.replace(/\/$/, "");
-
 async function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -34,7 +32,7 @@ async function airtableFetch(
   attempt = 0,
   options: RequestOptions = DEFAULT_OPTIONS,
 ): Promise<Response> {
-  const url = `${baseUrl}/${env.AIRTABLE_BASE_ID}/${path}`;
+  const url = `${env.AIRTABLE_ENDPOINT_URL.replace(/\/$/, "")}/${env.AIRTABLE_BASE_ID}/${path}`;
   const headers: HeadersInit = {
     Authorization: `Bearer ${env.AIRTABLE_API_KEY}`,
     "Content-Type": "application/json",
