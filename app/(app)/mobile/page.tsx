@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function MobileHome() {
   return (
     <section className="space-y-4" aria-labelledby="mobile-home-heading">
@@ -17,6 +19,11 @@ export default function MobileHome() {
         <p className="text-sm text-[color:var(--color-text-muted)]">
           次フェーズで Airtable の Documents テーブルと接続予定です。
         </p>
+        <div>
+          <Link href="/mobile/upload" className="btn btn-primary inline-flex w-full justify-center text-sm">
+            Uploaderを開く
+          </Link>
+        </div>
       </div>
     </section>
   );
