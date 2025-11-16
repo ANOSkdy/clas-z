@@ -10,7 +10,7 @@ import {
   type ApiError,
 } from "@/lib/schemas/settings";
 
-export const runtime = "nodejs";
+export const runtime = "node";
 
 const TABLE = "Companies";
 
@@ -96,7 +96,7 @@ export async function PUT(request: NextRequest) {
         correlationId,
         400,
         "INVALID_BODY",
-        parsed.error.errors[0]?.message ?? "入力内容を確認してください",
+        parsed.error.issues[0]?.message ?? "入力内容を確認してください",
       );
     }
     const now = new Date().toISOString();
@@ -141,7 +141,7 @@ export async function DELETE(request: NextRequest) {
         correlationId,
         400,
         "INVALID_BODY",
-        parsed.error.errors[0]?.message ?? "入力内容を確認してください",
+        parsed.error.issues[0]?.message ?? "入力内容を確認してください",
       );
     }
     const record = await getRecord<CompanyRecordFields>(TABLE, auth.companyId);

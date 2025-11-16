@@ -9,7 +9,7 @@ import {
   type ApiError,
 } from "@/lib/schemas/settings";
 
-export const runtime = "nodejs";
+export const runtime = "node";
 
 type CustomerRecordFields = {
   DisplayName?: string;
@@ -93,7 +93,7 @@ export async function PUT(request: NextRequest) {
         correlationId,
         status: 400,
         code: "INVALID_BODY",
-        message: parsed.error.errors[0]?.message ?? "入力内容を確認してください",
+        message: parsed.error.issues[0]?.message ?? "入力内容を確認してください",
       });
     }
     const now = new Date().toISOString();
