@@ -147,6 +147,31 @@ export async function createRecord<TFields extends Record<string, unknown>>(
   return (await response.json()) as AirtableRecord<TFields>;
 }
 
+export async function createRecordsBatch<TFields extends Record<string, unknown>>(
+  table: string,
+  records: TFields[],
+  options?: RequestOptions,
+): Promise<AirtableRecord<TFields>[]> {
+  if (!records.length) return [];
+  const result: AirtableRecord<TFields>[] = [];
+  const chunkSize = 10;
+  for (let i = 0; i < records.length; i += chunkSize) {
+    const chunk = records.slice(i, i + chunkSize);
+    const response = await airtableFetch(
+      encodeURIComponent(table),
+      {
+        method: "POST",
+        body: JSON.stringify({ records: chunk.map((fields) => ({ fields })) }),
+      },
+      0,
+      options,
+    );
+    const json = (await response.json()) as AirtableListResponse<TFields>;
+    result.push(...json.records);
+  }
+  return result;
+}
+
 export async function listRecords<TFields extends Record<string, unknown>>(
   table: string,
   params?: {
@@ -186,4 +211,38 @@ export async function updateRecord<TFields extends Record<string, unknown>>(
     options,
   );
   return (await response.json()) as AirtableRecord<TFields>;
+}
+
+export async function getRecord<TFields extends Record<string, unknown>>(
+  table: string,
+  id: string,
+  options?: RequestOptions,
+): Promise<AirtableRecord<TFields>> {
+  const response = await airtableFetch(
+    `${encodeURIComponent(table)}/${encodeURIComponent(id)}`,
+    { method: "GET" },
+    0,
+    options,
+  );
+  return (await response.json()) as AirtableRecord<TFields>;
+}
+
+export async function deleteRecordsBatch(
+  table: string,
+  ids: string[],
+  options?: RequestOptions,
+): Promise<void> {
+  if (!ids.length) return;
+  const chunkSize = 10;
+  for (let i = 0; i < ids.length; i += chunkSize) {
+    const chunk = ids.slice(i, i + chunkSize);
+    const search = new URLSearchParams();
+    chunk.forEach((idValue) => search.append("records[]", idValue));
+    await airtableFetch(
+      `${encodeURIComponent(table)}?${search.toString()}`,
+      { method: "DELETE" },
+      0,
+      options,
+    );
+  }
 }
