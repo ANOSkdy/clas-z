@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function PcHome() {
   return (
     <section className="space-y-4" aria-labelledby="pc-home-heading">
@@ -19,6 +21,12 @@ export default function PcHome() {
           <li>レビュータスクと Journal Entries の連動</li>
           <li>通知 / メッセージのコンテキスト表示</li>
         </ul>
+      </div>
+      <div className="card space-y-3" aria-label="レビュー導線">
+        <p className="text-sm text-[color:var(--color-text-muted)]">最新の PC レビュー体験はこちらから</p>
+        <Link href="/pc/review" className="btn-primary inline-flex items-center justify-center text-sm">
+          PC Review ワークスペースへ
+        </Link>
       </div>
     </section>
   );
