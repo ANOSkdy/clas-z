@@ -9,7 +9,7 @@ import {
   type ApiError,
 } from "@/lib/schemas/settings";
 
-export const runtime = "node";
+export const runtime = "nodejs";
 
 type CompanyRecordFields = {
   Name?: string;

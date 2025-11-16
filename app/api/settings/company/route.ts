@@ -10,16 +10,16 @@ import {
   type ApiError,
 } from "@/lib/schemas/settings";
 
-export const runtime = "node";
+export const runtime = "nodejs";
 
 const TABLE = "Companies";
 
 type CompanyRecordFields = {
-  Name?: string;
-  LegalName?: string;
-  BillingEmail?: string;
-  Timezone?: string;
-  TaxId?: string;
+  Name?: string | null;
+  LegalName?: string | null;
+  BillingEmail?: string | null;
+  Timezone?: string | null;
+  TaxId?: string | null;
   Status?: "active" | "deleted";
   DeletedAt?: string | null;
   UpdatedAt?: string;
