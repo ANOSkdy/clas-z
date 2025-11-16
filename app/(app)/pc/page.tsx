@@ -34,6 +34,18 @@ export default function PcHome() {
           Trial Balance ワークスペースへ
         </Link>
       </div>
+      <div className="card space-y-3" aria-label="プロフィール編集">
+        <p className="text-sm text-[color:var(--color-text-muted)]">通知メールや表示名はここから更新できます</p>
+        <Link href="/customer/edit" className="btn-secondary inline-flex items-center justify-center text-sm">
+          プロフィールを編集
+        </Link>
+      </div>
+      <div className="card space-y-3" aria-label="会社設定">
+        <p className="text-sm text-[color:var(--color-text-muted)]">会社情報と危険操作 (論理削除) をまとめて管理</p>
+        <Link href="/settings/company" className="btn-secondary inline-flex items-center justify-center text-sm">
+          会社設定へ
+        </Link>
+      </div>
     </section>
   );
 }
