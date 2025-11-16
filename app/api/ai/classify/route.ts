@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { z } from "zod";
-import { createUploadUrl, UploadRequestSchema } from "@/lib/storage";
+import { classifyDocument } from "@/lib/ai";
+import { ClassifyRequestSchema } from "@/lib/schemas";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   const correlationId = randomUUID();
   try {
-    const body = await req.json();
-    const input = UploadRequestSchema.parse(body);
-    const result = await createUploadUrl(input);
+    const payload = await req.json();
+    const input = ClassifyRequestSchema.parse(payload);
+    const result = await classifyDocument(input);
 
     return NextResponse.json({ ...result, correlationId }, { status: 200 });
   } catch (error: unknown) {

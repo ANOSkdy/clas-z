@@ -1,25 +1,28 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { z } from "zod";
-import { createUploadUrl, UploadRequestSchema } from "@/lib/storage";
+
+const ParamsSchema = z.object({
+  documentId: z.string().uuid("documentId must be UUID"),
+});
 
 export const runtime = "nodejs";
 
-export async function POST(req: Request) {
+type RouteContext = { params: { documentId: string } | Promise<{ documentId: string }> };
+
+export async function POST(_req: Request, context: RouteContext) {
   const correlationId = randomUUID();
   try {
-    const body = await req.json();
-    const input = UploadRequestSchema.parse(body);
-    const result = await createUploadUrl(input);
-
-    return NextResponse.json({ ...result, correlationId }, { status: 200 });
+    const { documentId } = ParamsSchema.parse(await context.params);
+    // TODO: Airtable の JournalEntries/Tasks を更新
+    return NextResponse.json({ ok: true, documentId, correlationId }, { status: 200 });
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
           error: {
             code: "BAD_REQUEST",
-            message: error.issues[0]?.message ?? "Invalid payload",
+            message: error.issues[0]?.message ?? "Invalid documentId",
           },
           correlationId,
         },

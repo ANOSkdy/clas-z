@@ -1,35 +1,60 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { z } from "zod";
-import { listRecords, createRecord } from "../../../lib/airtable";
+import { createRecord } from "@/lib/airtable";
+import { DocumentCreateSchema, type DocumentRecordFields } from "@/lib/schemas";
+import { getCurrentContext } from "@/lib/auth";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
-export async function GET() {
-  try {
-    const data = await listRecords("Documents");
-    return NextResponse.json({ ok: true, items: data.records }, { status: 200 });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
-  }
-}
-
-const CreateSchema = z.object({
-  title: z.string().min(1),
-  blobUrl: z.string().min(1),
-  size: z.number().nonnegative().optional().default(0),
-});
 
 export async function POST(req: Request) {
+  const correlationId = randomUUID();
   try {
     const body = await req.json();
-    const input = CreateSchema.parse(body);
-    const rec = await createRecord("Documents", input);
-    return NextResponse.json({ ok: true, id: rec.id }, { status: 201 });
+    const input = DocumentCreateSchema.parse(body);
+    await getCurrentContext(req); // placeholder for invitationトークン連携
+
+    const fields: DocumentRecordFields = {
+      CompanyId: input.companyId,
+      UploaderUserId: input.uploaderUserId,
+      BlobUrl: input.blobUrl,
+      Meta: input.meta,
+      Status: "pending",
+    };
+
+    const record = await createRecord<DocumentRecordFields>("Documents", fields);
+
+    return NextResponse.json(
+      {
+        documentId: record.id,
+        correlationId,
+      },
+      { status: 201 },
+    );
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    const code = /invalid/i.test(message) ? 400 : 500;
-    return NextResponse.json({ ok: false, error: message }, { status: code });
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "BAD_REQUEST",
+            message: error.issues[0]?.message ?? "Invalid payload",
+          },
+          correlationId,
+        },
+        { status: 400 },
+      );
+    }
+
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json(
+      {
+        error: {
+          code: "INTERNAL_ERROR",
+          message,
+        },
+        correlationId,
+      },
+      { status: 500 },
+    );
   }
 }

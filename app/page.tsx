@@ -1,2 +1,1 @@
-import { redirect } from "next/navigation";
-export default function Page(){ redirect("/pc"); }
+export { default } from "./(marketing)/page";
