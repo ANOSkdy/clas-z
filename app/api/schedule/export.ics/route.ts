@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { findCompanyByToken, listEvents, toICSFeed, trackScheduleAction } from "@/lib/schedule";
 import { ICSExportQuerySchema, type ApiError } from "@/lib/schemas/schedule";
 
-export const runtime = "node";
+export const runtime = "nodejs";
 
 function respondCalendar(body: string, correlationId: string) {
   return new NextResponse(body, {

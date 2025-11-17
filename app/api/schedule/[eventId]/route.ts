@@ -5,7 +5,7 @@ import { getCurrentContext } from "@/lib/auth";
 import { getEventById, softDeleteEvent, trackScheduleAction, updateEvent } from "@/lib/schedule";
 import { UpdateEventRequestSchema, type ApiError } from "@/lib/schemas/schedule";
 
-export const runtime = "node";
+export const runtime = "nodejs";
 
 function respond<T>(correlationId: string, body: T, status = 200) {
   return NextResponse.json(body, { status, headers: { "x-correlation-id": correlationId } });
@@ -16,10 +16,11 @@ function respondError(correlationId: string, status: number, code: string, messa
   return respond(error.correlationId, error, status);
 }
 
-export async function GET(_request: NextRequest, { params }: { params: { eventId: string } }) {
+export async function GET(_request: NextRequest, context: { params: Promise<{ eventId: string }> }) {
   const correlationId = randomUUID();
   try {
-    const event = await getEventById(params.eventId);
+    const { eventId } = await context.params;
+    const event = await getEventById(eventId);
     return respond(correlationId, { event, correlationId });
   } catch (error) {
     const message = error instanceof Error ? error.message : "イベントの取得に失敗しました";
@@ -27,7 +28,7 @@ export async function GET(_request: NextRequest, { params }: { params: { eventId
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { eventId: string } }) {
+export async function PUT(request: NextRequest, context: { params: Promise<{ eventId: string }> }) {
   const correlationId = randomUUID();
   try {
     const auth = await getCurrentContext(request);
@@ -44,11 +45,12 @@ export async function PUT(request: NextRequest, { params }: { params: { eventId:
         parsed.error.issues[0]?.message ?? "入力内容を確認してください",
       );
     }
-    const existing = await getEventById(params.eventId);
+    const { eventId } = await context.params;
+    const existing = await getEventById(eventId);
     if (existing.companyId !== auth.companyId) {
       return respondError(correlationId, 403, "FORBIDDEN", "権限がありません");
     }
-    const updated = await updateEvent(params.eventId, parsed.data);
+    const updated = await updateEvent(eventId, parsed.data);
     await trackScheduleAction(auth.companyId, "schedule.updated", correlationId, { eventId: updated.id });
     return respond(correlationId, { event: updated, correlationId });
   } catch (error) {
@@ -57,18 +59,19 @@ export async function PUT(request: NextRequest, { params }: { params: { eventId:
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { eventId: string } }) {
+export async function DELETE(request: NextRequest, context: { params: Promise<{ eventId: string }> }) {
   const correlationId = randomUUID();
   try {
     const auth = await getCurrentContext(request);
     if (!auth.companyId) {
       return respondError(correlationId, 401, "AUTH_REQUIRED", "companyId が必要です");
     }
-    const existing = await getEventById(params.eventId);
+    const { eventId } = await context.params;
+    const existing = await getEventById(eventId);
     if (existing.companyId !== auth.companyId) {
       return respondError(correlationId, 403, "FORBIDDEN", "権限がありません");
     }
-    const deleted = await softDeleteEvent(params.eventId);
+    const deleted = await softDeleteEvent(eventId);
     await trackScheduleAction(auth.companyId, "schedule.cancelled", correlationId, { eventId: deleted.id });
     return respond(correlationId, { event: deleted, correlationId });
   } catch (error) {

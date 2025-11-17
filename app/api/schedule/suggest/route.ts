@@ -6,7 +6,7 @@ import { suggestSchedule } from "@/lib/ai";
 import { trackScheduleAction } from "@/lib/schedule";
 import { SuggestScheduleRequestSchema, type ApiError } from "@/lib/schemas/schedule";
 
-export const runtime = "node";
+export const runtime = "nodejs";
 
 function respond<T>(correlationId: string, body: T, status = 200) {
   return NextResponse.json(body, { status, headers: { "x-correlation-id": correlationId } });

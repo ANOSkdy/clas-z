@@ -189,7 +189,7 @@ export async function ensureCompanyCalendarToken(companyId: string): Promise<str
   return token;
 }
 
-export function toICS(event: ScheduleEvent, _opts?: { prodId?: string }): string {
+export function toICS(event: ScheduleEvent, opts: { prodId?: string } = {}): string {
   const dtStamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   const dtStart = new Date(event.startsAt).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   const dtEnd = new Date(event.endsAt).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
@@ -201,6 +201,7 @@ export function toICS(event: ScheduleEvent, _opts?: { prodId?: string }): string
     `DTEND:${dtEnd}`,
     `SUMMARY:${event.title}`,
   ];
+  if (opts.prodId) lines.splice(1, 0, `X-PRODID:${opts.prodId}`);
   if (event.description) lines.push(`DESCRIPTION:${event.description.replace(/\n/g, "\\n")}`);
   if (event.location) lines.push(`LOCATION:${event.location}`);
   lines.push("END:VEVENT");

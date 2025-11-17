@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { findCompanyByToken, getEventById, toICS, trackScheduleAction } from "@/lib/schedule";
 import { ICSExportQuerySchema, type ApiError } from "@/lib/schemas/schedule";
 
-export const runtime = "node";
+export const runtime = "nodejs";
 
 function respondCalendar(body: string, correlationId: string) {
   return new NextResponse(body, {
@@ -21,7 +21,7 @@ function respondError(correlationId: string, status: number, code: string, messa
   return NextResponse.json(error, { status, headers: { "x-correlation-id": correlationId } });
 }
 
-export async function GET(request: NextRequest, { params }: { params: { eventId: string } }) {
+export async function GET(request: NextRequest, context: { params: Promise<{ eventId: string }> }) {
   const correlationId = randomUUID();
   try {
     const parsed = ICSExportQuerySchema.safeParse(Object.fromEntries(request.nextUrl.searchParams.entries()));
@@ -32,7 +32,8 @@ export async function GET(request: NextRequest, { params }: { params: { eventId:
     if (!company) {
       return respondError(correlationId, 404, "COMPANY_NOT_FOUND", "有効なトークンではありません");
     }
-    const event = await getEventById(params.eventId);
+    const { eventId } = await context.params;
+    const event = await getEventById(eventId);
     if (event.companyId !== company.id) {
       return respondError(correlationId, 403, "FORBIDDEN", "イベントが見つかりません");
     }

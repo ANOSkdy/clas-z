@@ -5,7 +5,7 @@ import { listRecords } from "@/lib/airtable";
 import { getEventById, markNotified, recordNotification } from "@/lib/schedule";
 import type { ApiError } from "@/lib/schemas/schedule";
 
-export const runtime = "node";
+export const runtime = "nodejs";
 
 type CalendarRecordFields = {
   CompanyId: string;
