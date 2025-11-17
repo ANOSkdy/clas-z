@@ -8,6 +8,11 @@ export const EventName = z.enum([
   "manual.viewed",
   "manual.anchor_click",
   "perf.vitals",
+  "auth.login.viewed",
+  "auth.login.submit",
+  "auth.login.success",
+  "auth.login.failure",
+  "auth.logout",
 ]);
 
 export const AnalyticsEvent = z.object({

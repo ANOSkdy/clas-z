@@ -15,6 +15,12 @@ const EnvSchema = z.object({
     .default("https://api.airtable.com/v0"),
   GEMINI_API_KEY: z.string().min(1, "GEMINI_API_KEY が必要です"),
   BLOB_READ_WRITE_TOKEN: z.string().min(1, "BLOB_READ_WRITE_TOKEN が必要です"),
+  AUTH_SECRET: z.string().min(1, "AUTH_SECRET が必要です"),
+  AUTH_COOKIE_NAME: z
+    .string()
+    .min(1, "AUTH_COOKIE_NAME が必要です")
+    .default("clas_z_session"),
+  AUTH_DEV_EMAILS: z.string().optional(),
 });
 
 type EnvShape = z.infer<typeof EnvSchema>;
@@ -32,6 +38,9 @@ function loadEnv(): EnvShape {
     AIRTABLE_ENDPOINT_URL: process.env.AIRTABLE_ENDPOINT_URL ?? "https://api.airtable.com/v0",
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
     BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
+    AUTH_SECRET: process.env.AUTH_SECRET,
+    AUTH_COOKIE_NAME: process.env.AUTH_COOKIE_NAME ?? "clas_z_session",
+    AUTH_DEV_EMAILS: process.env.AUTH_DEV_EMAILS,
   });
 
   if (!parsed.success) {

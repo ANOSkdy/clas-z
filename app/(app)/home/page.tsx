@@ -1,9 +1,11 @@
+import { withAuthPage } from "@/lib/auth-guard";
+
 import HomeTabs from "./_components/HomeTabs";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export default function HomePage() {
-  return (
+  return withAuthPage(() => (
     <div className="page-container space-y-6" aria-labelledby="home-heading">
       <div className="space-y-2">
         <p className="text-xs uppercase tracking-[0.3em] text-[color:var(--color-text-muted)]">home</p>
@@ -16,5 +18,5 @@ export default function HomePage() {
       </div>
       <HomeTabs />
     </div>
-  );
+  ));
 }
