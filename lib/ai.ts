@@ -1,4 +1,5 @@
 import { ClassifyRequestInput, ClassifyResponse } from "./schemas";
+import type { ScheduleEvent } from "./schemas/schedule";
 import { TBLine } from "./schemas/tb";
 import { env } from "./env";
 
@@ -58,4 +59,37 @@ export async function extractTrialBalance(
     lines: sampleLines,
     confidence: Number(`0.${hashSeed % 90}`),
   };
+}
+
+export async function suggestSchedule(input: {
+  companyId: string;
+  windowStart?: string;
+  windowEnd?: string;
+  seed?: string;
+}): Promise<Array<Omit<ScheduleEvent, "id" | "companyId" | "icalUid" | "status" | "source" | "createdAt" | "updatedAt">>> {
+  const now = input.windowStart ? new Date(input.windowStart) : new Date();
+  const proposal1 = new Date(now.getTime() + 1000 * 60 * 60 * 48);
+  const proposal2 = new Date(now.getTime() + 1000 * 60 * 60 * 72);
+  return [
+    {
+      title: "レビューセッション",
+      description: input.seed ? `シード: ${input.seed}` : undefined,
+      startsAt: proposal1.toISOString(),
+      endsAt: new Date(proposal1.getTime() + 60 * 60 * 1000).toISOString(),
+      timezone: "UTC",
+      location: "オンライン",
+      attendees: [],
+      source: "ai" as const,
+    },
+    {
+      title: "ハンドオフ",
+      description: "次のステップを整理",
+      startsAt: proposal2.toISOString(),
+      endsAt: new Date(proposal2.getTime() + 45 * 60 * 1000).toISOString(),
+      timezone: "UTC",
+      location: "オンライン",
+      attendees: [],
+      source: "ai" as const,
+    },
+  ];
 }
