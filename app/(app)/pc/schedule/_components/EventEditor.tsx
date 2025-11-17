@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type React from "react";
 
 import type { ScheduleEvent } from "@/lib/schemas/schedule";
@@ -20,6 +20,9 @@ export default function EventEditor({ open, initialValue, onSave, onClose }: Pro
   const [location, setLocation] = useState("");
   const [timezone, setTimezone] = useState("");
   const [attendees, setAttendees] = useState("");
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const errorRef = useRef<HTMLDivElement | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialValue) {
@@ -39,13 +42,26 @@ export default function EventEditor({ open, initialValue, onSave, onClose }: Pro
       setTimezone("");
       setAttendees("");
     }
+    setValidationError(null);
   }, [initialValue, open]);
+
+  useEffect(() => {
+    if (validationError) {
+      errorRef.current?.focus();
+    }
+  }, [validationError]);
+
+  useFocusTrap(dialogRef, open);
 
   if (!open) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !startsAt || !endsAt) return;
+    if (!title || !startsAt || !endsAt) {
+      setValidationError("タイトル、開始、終了の入力は必須です。");
+      return;
+    }
+    setValidationError(null);
     onSave({
       title,
       description: description || undefined,
@@ -61,14 +77,42 @@ export default function EventEditor({ open, initialValue, onSave, onClose }: Pro
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" role="dialog" aria-modal>
-      <form onSubmit={handleSubmit} className="card w-[480px] space-y-3" aria-label="イベント編集フォーム">
+    <div
+      ref={dialogRef}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="event-editor-title"
+      aria-describedby="event-editor-description"
+    >
+      <form
+        onSubmit={handleSubmit}
+        className="card w-[480px] space-y-3"
+        aria-labelledby="event-editor-title"
+        aria-describedby="event-editor-description"
+      >
+        {validationError && (
+          <div
+            ref={errorRef}
+            role="alert"
+            tabIndex={-1}
+            id="event-editor-error"
+            className="rounded-md border border-[color:var(--color-error-border,#FCA5A5)] bg-[color:var(--color-error-bg,#FEF2F2)] p-3 text-sm"
+          >
+            {validationError}
+          </div>
+        )}
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">{initialValue ? "イベントを編集" : "イベントを作成"}</h2>
+          <h2 id="event-editor-title" className="text-lg font-semibold">
+            {initialValue ? "イベントを編集" : "イベントを作成"}
+          </h2>
           <button type="button" onClick={onClose} className="btn-secondary px-3 py-2">
             閉じる
           </button>
         </div>
+        <p id="event-editor-description" className="text-sm text-[color:var(--color-text-muted)]">
+          必須項目を入力して保存してください。
+        </p>
         <label className="space-y-1 text-sm">
           <span className="font-medium">タイトル</span>
           <input
@@ -77,6 +121,8 @@ export default function EventEditor({ open, initialValue, onSave, onClose }: Pro
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="例: 定例ミーティング"
+            aria-invalid={validationError ? !title : undefined}
+            aria-errormessage={validationError ? "event-editor-error" : undefined}
           />
         </label>
         <label className="space-y-1 text-sm">
@@ -87,6 +133,8 @@ export default function EventEditor({ open, initialValue, onSave, onClose }: Pro
             className="input"
             value={startsAt}
             onChange={(e) => setStartsAt(e.target.value)}
+            aria-invalid={validationError ? !startsAt : undefined}
+            aria-errormessage={validationError ? "event-editor-error" : undefined}
           />
         </label>
         <label className="space-y-1 text-sm">
@@ -97,6 +145,8 @@ export default function EventEditor({ open, initialValue, onSave, onClose }: Pro
             className="input"
             value={endsAt}
             onChange={(e) => setEndsAt(e.target.value)}
+            aria-invalid={validationError ? !endsAt : undefined}
+            aria-errormessage={validationError ? "event-editor-error" : undefined}
           />
         </label>
         <label className="space-y-1 text-sm">
@@ -136,4 +186,34 @@ export default function EventEditor({ open, initialValue, onSave, onClose }: Pro
       </form>
     </div>
   );
+}
+
+function useFocusTrap(containerRef: React.RefObject<HTMLElement>, active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const focusable = Array.from(
+      container.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+    focusable[0]?.focus();
+
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (event.key !== "Tab" || focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    };
+
+    container.addEventListener("keydown", handleKeydown);
+    return () => container.removeEventListener("keydown", handleKeydown);
+  }, [active, containerRef]);
 }

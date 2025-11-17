@@ -2,6 +2,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 
+import A11yProvider, { useAnnouncer } from "./(app)/providers/A11yProvider";
+import PerfProvider from "./(app)/providers/PerfProvider";
+
 type UndoToastState = {
   companyName: string;
   status: "idle" | "restoring" | "restored" | "error";
@@ -21,24 +24,29 @@ export default function Providers({ children }: { children: ReactNode }) {
   const [client] = useState(() => new QueryClient());
   return (
     <QueryClientProvider client={client}>
-      <UndoToastHost />
-      {children}
+      <A11yProvider>
+        <PerfProvider />
+        <UndoToastHost />
+        {children}
+      </A11yProvider>
     </QueryClientProvider>
   );
 }
 
 function UndoToastHost() {
   const [toast, setToast] = useState<UndoToastState | null>(null);
+  const announce = useAnnouncer();
 
   useEffect(() => {
     const handler = (event: Event) => {
       const detail = (event as CustomEvent<{ entity: string; companyName: string }>).detail;
       if (!detail || detail.entity !== "company") return;
       setToast({ companyName: detail.companyName, status: "idle" });
+      announce(`会社 ${detail.companyName} を削除しました。`);
     };
     window.addEventListener(EVENT_NAME, handler as EventListener);
     return () => window.removeEventListener(EVENT_NAME, handler as EventListener);
-  }, []);
+  }, [announce]);
 
   const dismiss = useCallback(() => setToast(null), []);
 
@@ -59,12 +67,14 @@ function UndoToastHost() {
         throw new Error(message);
       }
       setToast((prev) => (prev ? { ...prev, status: "restored", error: undefined } : prev));
+      announce(`会社 ${toast?.companyName ?? ""} を復元しました。`);
       setTimeout(() => setToast(null), 5000);
     } catch (error) {
       const message = error instanceof Error ? error.message : "復元に失敗しました";
       setToast((prev) => (prev ? { ...prev, status: "error", error: message } : prev));
+      announce(message);
     }
-  }, []);
+  }, [announce, toast?.companyName]);
 
   if (!toast) return null;
 

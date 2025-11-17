@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState, type React } from "react";
 
 type Props = {
   open: boolean;
@@ -15,6 +15,7 @@ export function TBSendModal({ open, onClose, onSubmit, isSubmitting }: Props) {
   const [recipientInput, setRecipientInput] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -34,6 +35,8 @@ export function TBSendModal({ open, onClose, onSubmit, isSubmitting }: Props) {
   );
 
   const hasInvalidEmail = recipients.some((recipient) => !emailRegex.test(recipient));
+
+  useFocusTrap(dialogRef, open);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -58,11 +61,25 @@ export function TBSendModal({ open, onClose, onSubmit, isSubmitting }: Props) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" role="dialog" aria-modal="true">
-      <form onSubmit={handleSubmit} className="w-full max-w-lg rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-6 space-y-4">
+    <div
+      ref={dialogRef}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tb-send-title"
+      aria-describedby="tb-send-description"
+    >
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-lg rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-6 space-y-4"
+      >
         <header>
-          <h2 className="text-lg font-semibold">試算表を送付</h2>
-          <p className="text-sm text-[color:var(--color-text-muted)]">宛先とメッセージを入力して送信します。</p>
+          <h2 id="tb-send-title" className="text-lg font-semibold">
+            試算表を送付
+          </h2>
+          <p id="tb-send-description" className="text-sm text-[color:var(--color-text-muted)]">
+            宛先とメッセージを入力して送信します。
+          </p>
         </header>
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="tb-send-recipients">
@@ -75,6 +92,8 @@ export function TBSendModal({ open, onClose, onSubmit, isSubmitting }: Props) {
             value={recipientInput}
             onChange={(event) => setRecipientInput(event.target.value)}
             placeholder="example@company.jp, finance@example.com"
+            aria-invalid={Boolean(error) || hasInvalidEmail}
+            aria-errormessage={error ? "tb-send-error" : undefined}
           />
           <div className="flex flex-wrap gap-2 text-xs">
             {recipients.map((recipient) => (
@@ -96,7 +115,7 @@ export function TBSendModal({ open, onClose, onSubmit, isSubmitting }: Props) {
           />
         </div>
         {error && (
-          <p className="text-sm text-[color:var(--color-error-text,#991B1B)]" role="status">
+          <p id="tb-send-error" className="text-sm text-[color:var(--color-error-text,#991B1B)]" role="alert">
             {error}
           </p>
         )}
@@ -114,4 +133,34 @@ export function TBSendModal({ open, onClose, onSubmit, isSubmitting }: Props) {
       </form>
     </div>
   );
+}
+
+function useFocusTrap(containerRef: React.RefObject<HTMLElement>, active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const focusable = Array.from(
+      container.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+    focusable[0]?.focus();
+
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (event.key !== "Tab" || focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    };
+
+    container.addEventListener("keydown", handleKeydown);
+    return () => container.removeEventListener("keydown", handleKeydown);
+  }, [active, containerRef]);
 }

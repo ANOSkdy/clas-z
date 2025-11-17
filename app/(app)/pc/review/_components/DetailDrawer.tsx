@@ -3,7 +3,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import Image from "next/image";
 import { useQuery, useQueryClient, type InfiniteData, type QueryKey } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type React } from "react";
 import type { ReviewDetail, ReviewListItem } from "@/lib/schemas/review";
 
 type ReviewListResponse = { items: ReviewListItem[]; nextCursor?: string | null };
@@ -26,6 +26,7 @@ export default function DetailDrawer({
   onMessage,
 }: DetailDrawerProps) {
   const queryClient = useQueryClient();
+  const contentRef = useRef<HTMLDivElement | null>(null);
   const [note, setNote] = useState("");
   const [reason, setReason] = useState("");
   const [reasonError, setReasonError] = useState("");
@@ -89,6 +90,8 @@ export default function DetailDrawer({
     },
     [onOpenChange],
   );
+
+  useFocusTrap(contentRef, open);
 
   const mutateDetailCache = useCallback(
     (update: Partial<ReviewDetail>) => {
@@ -193,15 +196,20 @@ export default function DetailDrawer({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/30 data-[state=open]:animate-in" />
         <Dialog.Content
+          ref={contentRef}
           className="fixed inset-y-0 right-0 w-full max-w-xl overflow-y-auto bg-[color:var(--color-surface)] p-6 shadow-xl focus:outline-none"
           onKeyDown={handleKeys}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="detail-drawer-title"
+          aria-describedby="detail-drawer-description"
         >
           <div className="flex items-start justify-between gap-3">
             <div>
-              <Dialog.Title className="text-lg font-semibold">
+              <Dialog.Title id="detail-drawer-title" className="text-lg font-semibold">
                 {detail?.fileName ?? "ドキュメント詳細"}
               </Dialog.Title>
-              <Dialog.Description className="text-sm text-[color:var(--color-text-muted)]">
+              <Dialog.Description id="detail-drawer-description" className="text-sm text-[color:var(--color-text-muted)]">
                 {detail?.mimeType ?? "種類不明"} ・ {detail?.size ? formatBytes(detail.size) : "サイズ不明"}
               </Dialog.Description>
             </div>
@@ -288,8 +296,14 @@ export default function DetailDrawer({
                 value={reason}
                 onChange={(event) => setReason(event.target.value)}
                 placeholder="不足している情報や確認点"
+                aria-invalid={Boolean(reasonError)}
+                aria-errormessage={reasonError ? "detail-drawer-reason-error" : undefined}
               />
-              {reasonError && <span className="text-sm text-rose-600">{reasonError}</span>}
+              {reasonError && (
+                <span id="detail-drawer-reason-error" className="text-sm text-rose-600">
+                  {reasonError}
+                </span>
+              )}
             </label>
           </section>
           <div className="mt-6 flex flex-wrap gap-3">
@@ -329,4 +343,34 @@ function formatBytes(value: number) {
   const units = ["B", "KB", "MB", "GB"];
   const exponent = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
   return `${(value / 1024 ** exponent).toFixed(1)}${units[exponent]}`;
+}
+
+function useFocusTrap(containerRef: React.RefObject<HTMLElement>, active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const focusable = Array.from(
+      container.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+    focusable[0]?.focus();
+
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (event.key !== "Tab" || focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    };
+
+    container.addEventListener("keydown", handleKeydown);
+    return () => container.removeEventListener("keydown", handleKeydown);
+  }, [active, containerRef]);
 }

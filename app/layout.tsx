@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <AppHeader />
           <Providers>
             <AnalyticsProvider>
-              <main id="main" className="shell-main">
+              <main id="main" className="shell-main" role="main" aria-label="コンテンツ">
                 {children}
               </main>
             </AnalyticsProvider>

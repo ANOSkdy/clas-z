@@ -9,12 +9,31 @@ export const EventName = z.enum([
   "manual.anchor_click",
 ]);
 
-export const AnalyticsEvent = z.object({
-  type: EventName,
+const BaseEvent = {
   source: z.string().default("web"),
   correlationId: z.string().uuid().optional(),
-  payload: z.record(z.string(), z.any()).optional(),
-});
+};
+
+export const AnalyticsEvent = z.discriminatedUnion("type", [
+  z.object({
+    type: EventName,
+    payload: z.record(z.string(), z.any()).optional(),
+    ...BaseEvent,
+  }),
+  z.object({
+    type: z.literal("perf.vitals"),
+    payload: z
+      .object({
+        name: z.string(),
+        value: z.number(),
+        rating: z.string().optional(),
+        path: z.string().optional(),
+        id: z.string().optional(),
+      })
+      .passthrough(),
+    ...BaseEvent,
+  }),
+]);
 
 export type AnalyticsEvent = z.infer<typeof AnalyticsEvent>;
 export type EventName = z.infer<typeof EventName>;
