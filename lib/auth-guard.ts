@@ -1,6 +1,7 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
+import type { JSX } from "react";
 
 import { getCurrentContext } from "./auth";
 

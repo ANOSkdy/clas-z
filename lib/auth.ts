@@ -96,7 +96,11 @@ export async function verifySession(token: string): Promise<SessionPayload | nul
 }
 
 export async function getCurrentContext(req?: Request): Promise<AuthContext> {
-  const cookieHeader = req?.headers.get("cookie") ?? cookies().getAll().map((c) => `${c.name}=${c.value}`).join("; ");
+  const cookieStore = req ? null : await Promise.resolve(cookies());
+  const cookieHeader =
+    req?.headers.get("cookie") ??
+    cookieStore?.getAll().map((c) => `${c.name}=${c.value}`).join("; ") ??
+    "";
   const parsedCookies = parseCookies(cookieHeader);
   const token = parsedCookies[env.AUTH_COOKIE_NAME];
   if (!token) {

@@ -1,5 +1,3 @@
-import { randomUUID } from "crypto";
-
 import { env } from "./env";
 
 export function buildCSP({ reportOnly = true }: { reportOnly?: boolean } = {}) {
@@ -61,5 +59,6 @@ export const securityHeaders: Record<string, string> = {
 };
 
 export function ensureCorrelationId(req: Request) {
-  return req.headers.get("x-correlation-id") ?? randomUUID();
+  const generateId = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : Date.now().toString());
+  return req.headers.get("x-correlation-id") ?? generateId();
 }

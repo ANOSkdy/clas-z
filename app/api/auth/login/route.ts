@@ -144,22 +144,22 @@ export async function POST(req: Request) {
   }
 
   try {
-    const isDev = "email" in parsed.data;
-    if (isDev) {
+    if ("email" in parsed.data) {
+      const email = parsed.data.email.toLowerCase();
       if (env.NODE_ENV === "production") {
         return buildErrorResponse(401, "UNAUTHORIZED", "Developer login is disabled", correlationId, baseHeaders);
       }
-      if (!parseDevEmails().includes(parsed.data.email.toLowerCase())) {
+      if (!parseDevEmails().includes(email)) {
         return buildErrorResponse(401, "UNAUTHORIZED", "Email not allowed for developer login", correlationId, baseHeaders);
       }
 
-      const existing = await findUserByEmail(parsed.data.email);
+      const existing = await findUserByEmail(email);
       const userRecord =
         existing ??
         (await createUser({
-          Email: parsed.data.email,
+          Email: email,
           CompanyId: "dev-company",
-          DisplayName: parsed.data.email.split("@")[0],
+          DisplayName: email.split("@")[0],
           Roles: ["admin"],
         }));
 
@@ -175,7 +175,7 @@ export async function POST(req: Request) {
         companyId: userRecord.fields.CompanyId,
         userId: userRecord.fields.Id ?? userRecord.id,
         method: "dev",
-        email: parsed.data.email,
+        email,
       });
 
       return NextResponse.json({ ok: true, correlationId }, { headers: baseHeaders });
