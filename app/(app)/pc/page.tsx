@@ -52,6 +52,12 @@ export default function PcHome() {
           会社設定へ
         </Link>
       </div>
+      <div className="card space-y-3" aria-label="スケジュール管理">
+        <p className="text-sm text-[color:var(--color-text-muted)]">イベントの作成・編集・ICS 共有をまとめて操作</p>
+        <Link href="/pc/schedule" className="btn-secondary inline-flex items-center justify-center text-sm">
+          スケジュールへ
+        </Link>
+      </div>
     </section>
   );
 }

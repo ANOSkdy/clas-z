@@ -59,3 +59,50 @@ export async function extractTrialBalance(
     confidence: Number(`0.${hashSeed % 90}`),
   };
 }
+
+type SuggestScheduleInput = {
+  companyId: string;
+  windowStart?: string;
+  windowEnd?: string;
+  seed?: string;
+};
+
+export async function suggestSchedule(input: SuggestScheduleInput) {
+  const base = input.seed ?? input.companyId;
+  const now = new Date();
+  const inHours = (hours: number) => new Date(now.getTime() + hours * 60 * 60 * 1000).toISOString();
+  const proposals = [
+    {
+      title: "Review Session",
+      description: "AI 提案: 直近の進捗確認ミーティング", 
+      startsAt: input.windowStart ?? inHours(48),
+      endsAt: input.windowEnd ?? inHours(49),
+      timezone: undefined,
+      location: "オンライン",
+      attendees: ["owner@example.com"],
+    },
+    {
+      title: "Handoff",
+      description: "AI 提案: 次の担当者への引き継ぎ", 
+      startsAt: inHours(72),
+      endsAt: inHours(73),
+      timezone: undefined,
+      location: "オフィス",
+      attendees: ["team@example.com"],
+    },
+  ];
+  const shift = base
+    .split("")
+    .map((c) => c.charCodeAt(0))
+    .reduce((a, b) => a + b, 0);
+  return proposals.map((proposal, index) => {
+    const start = new Date(proposal.startsAt);
+    const end = new Date(proposal.endsAt);
+    const delta = (shift + index * 7) % 1800000;
+    return {
+      ...proposal,
+      startsAt: new Date(start.getTime() + delta).toISOString(),
+      endsAt: new Date(end.getTime() + delta).toISOString(),
+    };
+  });
+}
