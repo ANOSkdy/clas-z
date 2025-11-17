@@ -3,9 +3,8 @@ import "./globals.css";
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
 
-import AnalyticsProvider from "./(app)/providers/AnalyticsProvider";
 import AppHeader from "./_components/AppHeader";
-import Providers from "./providers";
+import ClientProviders from "./(app)/providers/ClientProviders";
 
 export const metadata: Metadata = {
   title: "CLAS-Z",
@@ -18,13 +17,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <div className="app-shell">
           <AppHeader />
-          <Providers>
-            <AnalyticsProvider>
-              <main id="main" className="shell-main">
-                {children}
-              </main>
-            </AnalyticsProvider>
-          </Providers>
+          <ClientProviders>
+            <main id="main" className="shell-main">
+              {children}
+            </main>
+          </ClientProviders>
           <footer className="shell-footer" role="contentinfo">
             <span>© {new Date().getFullYear()} CLAS-Z</span>
             <div className="flex gap-4 text-sm">
