@@ -1,5 +1,3 @@
-import { env } from "@/lib/env";
-
 import LoginForm from "./_components/LoginForm";
 
 export const metadata = {
@@ -7,7 +5,8 @@ export const metadata = {
 };
 
 export default function LoginPage() {
-  const devEnabled = env.NODE_ENV !== "production" && Boolean(env.AUTH_DEV_EMAILS?.length);
+  const devEnabled =
+    process.env.NODE_ENV !== "production" && Boolean(process.env.AUTH_DEV_EMAILS?.length);
   return (
     <div className="page-container max-w-xl space-y-8" aria-labelledby="login-heading">
       <div className="space-y-3">
