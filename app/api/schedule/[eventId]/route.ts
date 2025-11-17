@@ -3,7 +3,7 @@ import crypto from "crypto";
 import { UpdateEventRequestSchema } from "@/lib/schemas/schedule";
 import { getEventById, updateEvent, softDeleteEvent } from "@/lib/schedule";
 
-export const runtime = "node";
+export const runtime = "nodejs";
 
 export async function GET(_request: Request, { params }: { params: { eventId: string } }) {
   const correlationId = crypto.randomUUID();

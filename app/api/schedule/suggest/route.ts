@@ -4,7 +4,7 @@ import { SuggestScheduleRequestSchema } from "@/lib/schemas/schedule";
 import { suggestSchedule } from "@/lib/ai";
 import { trackEvent } from "@/lib/events";
 
-export const runtime = "node";
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const correlationId = crypto.randomUUID();

@@ -4,7 +4,7 @@ import { ICSExportQuerySchema } from "@/lib/schemas/schedule";
 import { getEventById, toICS } from "@/lib/schedule";
 import { trackEvent } from "@/lib/events";
 
-export const runtime = "node";
+export const runtime = "nodejs";
 
 export async function GET(request: Request, { params }: { params: { eventId: string } }) {
   const correlationId = crypto.randomUUID();

@@ -3,7 +3,7 @@ import crypto from "crypto";
 import { listEvents, updateEvent } from "@/lib/schedule";
 import { trackEvent } from "@/lib/events";
 
-export const runtime = "node";
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const correlationId = crypto.randomUUID();

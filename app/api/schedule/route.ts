@@ -3,7 +3,7 @@ import crypto from "crypto";
 import { ListEventsQuerySchema, CreateEventRequestSchema } from "@/lib/schemas/schedule";
 import { createEvent, listEvents } from "@/lib/schedule";
 
-export const runtime = "node";
+export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   const correlationId = crypto.randomUUID();
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     const parsed = ListEventsQuerySchema.parse({
       from: url.searchParams.get("from") || undefined,
       to: url.searchParams.get("to") || undefined,
-      status: (url.searchParams.get("status") as any) || undefined,
+      status: url.searchParams.get("status") || undefined,
       limit: url.searchParams.get("limit") || undefined,
       cursor: url.searchParams.get("cursor") || undefined,
     });
