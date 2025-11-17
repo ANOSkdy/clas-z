@@ -28,6 +28,12 @@ export default function PcHome() {
           PC Review ワークスペースへ
         </Link>
       </div>
+      <div className="card space-y-3" aria-label="ホームハブ">
+        <p className="text-sm text-[color:var(--color-text-muted)]">ナビゲーションをまとめたホームハブ</p>
+        <Link href="/home" className="btn-secondary inline-flex items-center justify-center text-sm">
+          Home ハブへ移動
+        </Link>
+      </div>
       <div className="card space-y-3" aria-label="レーティング">
         <p className="text-sm text-[color:var(--color-text-muted)]">会社ごとの安全性スコアとイベントの一覧</p>
         <Link href="/pc/rating" className="btn-primary inline-flex items-center justify-center text-sm">

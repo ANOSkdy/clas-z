@@ -3,17 +3,17 @@ import { randomUUID } from "crypto";
 import { z } from "zod";
 
 import { getCurrentContext } from "@/lib/auth";
-import { trackEvent } from "@/lib/events";
-import { Events } from "@/lib/schemas/rating";
+import { parseAnalyticsEvent, trackEvent } from "@/lib/events";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   const requestCorrelation = req.headers.get("x-correlation-id");
-  const correlationId = requestCorrelation ?? randomUUID();
+  let correlationId = requestCorrelation ?? randomUUID();
   try {
     const body = req.headers.get("content-length") ? await req.json() : {};
-    const eventPayload = Events.parse(body);
+    const eventPayload = parseAnalyticsEvent(body);
+    correlationId = requestCorrelation ?? eventPayload.correlationId ?? correlationId;
     const context = await getCurrentContext(req);
     const companyId =
       context.companyId ?? (typeof eventPayload.payload?.companyId === "string" ? eventPayload.payload.companyId : null);

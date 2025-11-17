@@ -1,6 +1,6 @@
 export default function MarketingHome() {
   return (
-    <main id="main" className="page-container space-y-10" aria-labelledby="marketing-heading">
+    <div className="page-container space-y-10" aria-labelledby="marketing-heading">
       <section className="space-y-4">
         <p className="text-sm tracking-[0.2em] text-[color:var(--color-text-muted)]">P1 PLATFORM</p>
         <h1 id="marketing-heading" className="text-3xl font-semibold">
@@ -26,6 +26,6 @@ export default function MarketingHome() {
           <li>AI と審査 API のスタブにより、次フェーズで安全に拡張可能</li>
         </ul>
       </section>
-    </main>
+    </div>
   );
 }

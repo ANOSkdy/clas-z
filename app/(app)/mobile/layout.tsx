@@ -13,9 +13,9 @@ const navItems = [
 export default function MobileLayout({ children }: Props) {
   return (
     <div className="mobile-frame">
-      <main id="main" role="main" className="p-4 space-y-4" aria-live="polite">
+      <section role="region" aria-label="モバイルコンテンツ" className="p-4 space-y-4" aria-live="polite">
         {children}
-      </main>
+      </section>
       <nav className="mobile-nav" aria-label="モバイルメインナビ">
         {navItems.map((item) => (
           <a key={item.href} href={item.href}>

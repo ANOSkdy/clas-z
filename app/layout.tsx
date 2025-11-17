@@ -2,7 +2,9 @@ import "./tokens.css";
 import "./globals.css";
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
+
+import AnalyticsProvider from "./(app)/providers/AnalyticsProvider";
+import AppHeader from "./_components/AppHeader";
 import Providers from "./providers";
 
 export const metadata: Metadata = {
@@ -14,37 +16,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ja">
       <body>
-        <a href="#main" className="skip-link">
-          メインコンテンツへスキップ
-        </a>
         <div className="app-shell">
-          <header className="shell-header" role="banner">
-            <div>
-              <Link href="/" className="font-semibold tracking-wide">
-                CLAS-Z
-              </Link>
-              <p className="text-sm text-[color:var(--color-text-muted)]">会計書類の安心ルート</p>
-            </div>
-            <nav aria-label="グローバルナビ" className="flex flex-wrap items-center gap-4 text-sm">
-              <Link href="/mobile" className="underline-offset-4 hover:underline">
-                モバイル
-              </Link>
-              <Link href="/pc" className="underline-offset-4 hover:underline">
-                PC レビュー
-              </Link>
-              <Link href="/customer/edit" className="underline-offset-4 hover:underline">
-                プロフィール
-              </Link>
-              <Link href="/settings/company" className="underline-offset-4 hover:underline">
-                会社設定
-              </Link>
-              <Link href="/health" className="underline-offset-4 hover:underline">
-                ヘルスチェック
-              </Link>
-            </nav>
-          </header>
+          <AppHeader />
           <Providers>
-            <div className="shell-main">{children}</div>
+            <AnalyticsProvider>
+              <main id="main" className="shell-main">
+                {children}
+              </main>
+            </AnalyticsProvider>
           </Providers>
           <footer className="shell-footer" role="contentinfo">
             <span>© {new Date().getFullYear()} CLAS-Z</span>
