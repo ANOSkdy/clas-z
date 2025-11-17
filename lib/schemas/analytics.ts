@@ -13,7 +13,7 @@ export const AnalyticsEvent = z.object({
   type: EventName,
   source: z.string().default("web"),
   correlationId: z.string().uuid().optional(),
-  payload: z.record(z.any()).optional(),
+  payload: z.record(z.string(), z.any()).optional(),
 });
 
 export type AnalyticsEvent = z.infer<typeof AnalyticsEvent>;
