@@ -7,6 +7,7 @@ export const EventName = z.enum([
   "home.quick_action_click",
   "manual.viewed",
   "manual.anchor_click",
+  "perf.vitals",
 ]);
 
 export const AnalyticsEvent = z.object({

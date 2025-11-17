@@ -4,6 +4,7 @@
 .vercel/
 .env*
 !.env.example
+tsconfig.tsbuildinfo
 *.log
 .DS_Store
 .vercel

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 type Props = {
   open: boolean;
@@ -15,12 +15,39 @@ export function TBSendModal({ open, onClose, onSubmit, isSubmitting }: Props) {
   const [recipientInput, setRecipientInput] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!open) {
       setRecipientInput("");
       setMessage("");
       setError(null);
+      setSubmitted(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (open && dialogRef.current) {
+      const dialogEl = dialogRef.current;
+      const focusables = dialogEl.querySelectorAll<HTMLElement>(
+        'button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])',
+      );
+      focusables[0]?.focus();
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key !== "Tab" || focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      };
+      dialogEl.addEventListener("keydown", handleKeyDown);
+      return () => dialogEl.removeEventListener("keydown", handleKeyDown);
     }
   }, [open]);
 
@@ -37,6 +64,7 @@ export function TBSendModal({ open, onClose, onSubmit, isSubmitting }: Props) {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    setSubmitted(true);
     if (!recipients.length) {
       setError("宛先を入力してください");
       return;
@@ -57,12 +85,26 @@ export function TBSendModal({ open, onClose, onSubmit, isSubmitting }: Props) {
 
   if (!open) return null;
 
+  const errorId = "tb-send-error";
+  const descriptionId = "tb-send-description";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" role="dialog" aria-modal="true">
+    <div
+      ref={dialogRef}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tb-send-heading"
+      aria-describedby={descriptionId}
+    >
       <form onSubmit={handleSubmit} className="w-full max-w-lg rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-6 space-y-4">
         <header>
-          <h2 className="text-lg font-semibold">試算表を送付</h2>
-          <p className="text-sm text-[color:var(--color-text-muted)]">宛先とメッセージを入力して送信します。</p>
+          <h2 id="tb-send-heading" className="text-lg font-semibold">
+            試算表を送付
+          </h2>
+          <p id={descriptionId} className="text-sm text-[color:var(--color-text-muted)]">
+            宛先とメッセージを入力して送信します。
+          </p>
         </header>
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="tb-send-recipients">
@@ -75,6 +117,9 @@ export function TBSendModal({ open, onClose, onSubmit, isSubmitting }: Props) {
             value={recipientInput}
             onChange={(event) => setRecipientInput(event.target.value)}
             placeholder="example@company.jp, finance@example.com"
+            aria-invalid={submitted && (!!error || hasInvalidEmail || recipients.length === 0)}
+            aria-errormessage={error ? errorId : undefined}
+            required
           />
           <div className="flex flex-wrap gap-2 text-xs">
             {recipients.map((recipient) => (
@@ -93,10 +138,11 @@ export function TBSendModal({ open, onClose, onSubmit, isSubmitting }: Props) {
             className="min-h-[120px] w-full rounded border border-[color:var(--color-border)] bg-transparent px-3 py-2"
             value={message}
             onChange={(event) => setMessage(event.target.value)}
+            aria-describedby={error ? errorId : undefined}
           />
         </div>
         {error && (
-          <p className="text-sm text-[color:var(--color-error-text,#991B1B)]" role="status">
+          <p id={errorId} className="text-sm text-[color:var(--color-error-text,#991B1B)]" role="alert">
             {error}
           </p>
         )}
@@ -107,7 +153,7 @@ export function TBSendModal({ open, onClose, onSubmit, isSubmitting }: Props) {
           <button type="button" onClick={onClose} className="btn-secondary text-sm" disabled={isSubmitting}>
             キャンセル
           </button>
-          <button type="submit" className="btn-primary text-sm" disabled={isSubmitting || hasInvalidEmail}>
+          <button type="submit" className="btn-primary text-sm" disabled={isSubmitting || hasInvalidEmail} aria-describedby={error ? errorId : undefined}>
             {isSubmitting ? "送信中..." : "送信"}
           </button>
         </div>
