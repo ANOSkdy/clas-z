@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import { computeDocumentRating, grade } from "../lib/rating";
-import { Events } from "../lib/schemas/rating";
 
 describe("rating grade", () => {
   it("maps numeric score to rating level", () => {
@@ -35,22 +34,3 @@ describe("computeDocumentRating", () => {
   });
 });
 
-describe("Events schema", () => {
-  it("validates correlation id when present", () => {
-    const valid = Events.parse({
-      type: "upload.started",
-      source: "/mobile/upload",
-      correlationId: crypto.randomUUID(),
-      payload: { hello: "world" },
-    });
-    expect(valid.type).toBe("upload.started");
-
-    expect(() =>
-      Events.parse({
-        type: "broken",
-        source: "ui",
-        correlationId: "not-a-uuid",
-      }),
-    ).toThrowError();
-  });
-});

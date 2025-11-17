@@ -3,6 +3,7 @@ import "server-only";
 import { randomUUID } from "crypto";
 
 import { createRecord } from "./airtable";
+import { AnalyticsEvent } from "./schemas/analytics";
 
 const EVENTS_TABLE = "AnalyticsEvents";
 
@@ -20,17 +21,22 @@ type TrackEventInput = {
   companyId: string;
   userId?: string;
   type: string;
-  source: string;
+  source?: string;
   correlationId?: string;
   payload?: Record<string, unknown>;
 };
+
+export function parseAnalyticsEvent(data: unknown) {
+  const parsed = AnalyticsEvent.parse(data);
+  return { ...parsed, source: parsed.source ?? "web" };
+}
 
 export async function trackEvent(input: TrackEventInput): Promise<void> {
   const payload: AnalyticsEventFields = {
     CompanyId: input.companyId,
     UserId: input.userId ?? null,
     Type: input.type,
-    Source: input.source,
+    Source: input.source ?? "web",
     CorrelationId: input.correlationId ?? randomUUID(),
     PayloadJson: input.payload ? JSON.stringify(input.payload) : undefined,
     CreatedAt: new Date().toISOString(),

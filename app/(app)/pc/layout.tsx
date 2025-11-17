@@ -10,9 +10,9 @@ export default function PcLayout({ children }: Props) {
         <strong className="text-lg">Documents</strong>
         <p className="text-xs text-[color:var(--color-text-muted)]">次フェーズで絞り込みなどを追加</p>
       </aside>
-      <main id="main" role="main" className="main-pane">
+      <section role="region" aria-label="メインワークスペース" className="main-pane">
         {children}
-      </main>
+      </section>
       <aside className="pc-pane" aria-label="補助パネル">
         <p className="text-sm text-[color:var(--color-text-muted)]">コメント / 履歴</p>
         <p className="text-xs text-[color:var(--color-text-muted)]">レビュータスク連携のスペース</p>
