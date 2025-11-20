@@ -1,226 +1,56 @@
 @import "tailwindcss";
 
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
-html {
-  font-family: var(--font-body);
-  scroll-behavior: smooth;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  font-family: var(--font-body);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-}
-
-body::backdrop {
-  background: var(--color-bg);
-}
-
-img,
-svg,
-video {
-  max-width: 100%;
-  height: auto;
-}
-
-:focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 3px;
-}
-
-@media (prefers-reduced-motion: reduce) {
+@layer base {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+    box-sizing: border-box;
   }
-}
 
-.skip-link {
-  position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  padding: var(--space-8) var(--space-16);
-  background: var(--color-primary-salmon-700);
-  color: #fff;
-  border-radius: var(--radius-pill);
-  transform: translateY(-150%);
-  transition: transform 0.2s ease;
-  z-index: 100;
-}
-
-.skip-link:focus-visible {
-  transform: translateY(0);
-}
-
-.app-shell {
-  min-height: 100vh;
-  background: var(--color-bg);
-  display: flex;
-  flex-direction: column;
-}
-
-.shell-header,
-.shell-footer {
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  padding: var(--space-12) var(--space-24);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-16);
-}
-
-.shell-footer {
-  border-top: 1px solid var(--color-border);
-  border-bottom: none;
-  font-size: 0.875rem;
-  flex-wrap: wrap;
-}
-
-.shell-main {
-  flex: 1;
-  width: 100%;
-}
-
-.page-container {
-  width: min(100%, 960px);
-  margin: 0 auto;
-  padding: var(--space-24) var(--space-16);
-}
-
-@media (min-width: 768px) {
-  .page-container {
-    padding: var(--space-48) var(--space-32);
+  :root {
+    color-scheme: light;
   }
-}
 
-.card {
-  background: var(--color-surface);
-  border-radius: var(--radius-8);
-  border: 1px solid var(--color-border);
-  padding: var(--space-24);
-  box-shadow: var(--shadow-soft);
-}
+  html,
+  body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+    background-color: #0f172a;
+    font-family: var(--font-sans, "Inter", system-ui, -apple-system, sans-serif);
+  }
 
-button,
-.btn {
-  font: inherit;
-  border: none;
-  border-radius: var(--radius-pill);
-  padding: 0.85rem 1.25rem;
-  min-height: 44px;
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
-}
+  body {
+    color: #0f172a;
+    -webkit-font-smoothing: antialiased;
+  }
 
-.btn-primary,
-button.btn-primary {
-  background: var(--color-primary-plum-700);
-  color: #fff;
-}
+  body::backdrop {
+    background-color: #0f172a;
+  }
 
-.btn-secondary,
-button.btn-secondary {
-  background: transparent;
-  color: var(--color-primary-plum-800);
-  border: 1px solid var(--color-primary-plum-800);
-}
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
 
-.btn-primary:hover,
-.btn-secondary:hover,
-button.btn-primary:hover,
-button.btn-secondary:hover {
-  transform: translateY(-1px);
-}
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    min-height: 44px;
+    min-width: 44px;
+  }
 
-.btn:disabled,
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.mobile-frame {
-  display: grid;
-  grid-template-rows: 1fr auto;
-  min-height: calc(100svh - 120px);
-  background: var(--color-surface-muted);
-}
-
-.mobile-nav {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  border-top: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-
-.mobile-nav a {
-  padding: var(--space-12) var(--space-8);
-  text-align: center;
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-}
-
-.mobile-nav a:focus-visible,
-.mobile-nav a:hover {
-  color: var(--color-primary-plum-800);
-}
-
-.pc-frame {
-  display: grid;
-  grid-template-columns: 260px 1fr 320px;
-  min-height: calc(100svh - 120px);
-  background: var(--color-surface-muted);
-}
-
-.pc-pane {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  padding: var(--space-24);
-}
-
-.pc-pane + .pc-pane {
-  border-left: none;
-}
-
-.main-pane {
-  padding: var(--space-24);
-  border-left: 1px solid var(--color-border);
-  border-right: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-
-a,
-button,
-input,
-textarea {
-  font-family: inherit;
-}
-
-::selection {
-  background: var(--color-primary-plum-700);
-  color: #fff;
+  :focus-visible {
+    outline: 2px solid #0ea5e9;
+    outline-offset: 4px;
+  }
 }

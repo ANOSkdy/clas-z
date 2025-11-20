@@ -1,9 +1,9 @@
 import "./tokens.css";
 import "./globals.css";
-import type { ReactNode } from "react";
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 
-import AppHeader from "./_components/AppHeader";
+import MobileShell from "@/components/mobile-shell";
 import ClientProviders from "./(app)/providers/ClientProviders";
 
 export const metadata: Metadata = {
@@ -13,27 +13,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="ja">
-      <body>
-        <div className="app-shell">
-          <AppHeader />
-          <ClientProviders>
-            <main id="main" className="shell-main">
-              {children}
-            </main>
-          </ClientProviders>
-          <footer className="shell-footer" role="contentinfo">
-            <span>© {new Date().getFullYear()} CLAS-Z</span>
-            <div className="flex gap-4 text-sm">
-              <a href="mailto:support@clas-z.example" className="underline-offset-4 hover:underline">
-                サポート
-              </a>
-              <a href="/privacy" className="underline-offset-4 hover:underline">
-                プライバシー
-              </a>
-            </div>
-          </footer>
-        </div>
+    <html lang="ja" className="h-full">
+      <body className="h-full touch-manipulation antialiased">
+        <ClientProviders>
+          <MobileShell>{children}</MobileShell>
+        </ClientProviders>
       </body>
     </html>
   );
