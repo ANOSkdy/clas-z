@@ -189,30 +189,6 @@ button:disabled {
   color: var(--color-primary-plum-800);
 }
 
-.pc-frame {
-  display: grid;
-  grid-template-columns: 260px 1fr 320px;
-  min-height: calc(100svh - 120px);
-  background: var(--color-surface-muted);
-}
-
-.pc-pane {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  padding: var(--space-24);
-}
-
-.pc-pane + .pc-pane {
-  border-left: none;
-}
-
-.main-pane {
-  padding: var(--space-24);
-  border-left: 1px solid var(--color-border);
-  border-right: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-
 a,
 button,
 input,

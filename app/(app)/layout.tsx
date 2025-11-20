@@ -10,7 +10,7 @@ const navItems = [
   { label: "プロフィール", href: "/mobile/profile" },
 ];
 
-export default function MobileLayout({ children }: Props) {
+export default function AppMobileLayout({ children }: Props) {
   return (
     <div className="mobile-frame">
       <section role="region" aria-label="モバイルコンテンツ" className="p-4 space-y-4" aria-live="polite">
