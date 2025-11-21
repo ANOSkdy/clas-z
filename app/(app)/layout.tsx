@@ -1,14 +1,8 @@
 import type { ReactNode } from "react";
 
-type Props = { children: ReactNode };
+import { appNavItems } from "./nav-items";
 
-const navItems = [
-  { label: "ホーム", href: "/mobile" },
-  { label: "アップロード", href: "/mobile/upload" },
-  { label: "タスク", href: "/mobile/tasks" },
-  { label: "チャット", href: "/mobile/chat" },
-  { label: "プロフィール", href: "/mobile/profile" },
-];
+type Props = { children: ReactNode };
 
 export default function AppMobileLayout({ children }: Props) {
   return (
@@ -17,7 +11,7 @@ export default function AppMobileLayout({ children }: Props) {
         {children}
       </section>
       <nav className="mobile-nav" aria-label="モバイルメインナビ">
-        {navItems.map((item) => (
+        {appNavItems.map((item) => (
           <a key={item.href} href={item.href}>
             {item.label}
           </a>

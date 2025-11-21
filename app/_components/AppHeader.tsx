@@ -4,22 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { sendEvent } from "@/lib/analytics-client";
-
-const navItems = [
-  { label: "Home", href: "/home" },
-  { label: "Upload", href: "/mobile/upload" },
-  { label: "Review", href: "/pc/review" },
-  { label: "TB", href: "/pc/trial_balance" },
-  { label: "Rating", href: "/pc/rating" },
-  { label: "Schedule", href: "/pc/schedule" },
-  { label: "Settings", href: "/settings/company" },
-  { label: "Manual", href: "/manual" },
-];
+import { appNavItems, type AppNavItem } from "@/app/(app)/nav-items";
 
 export default function AppHeader() {
   const pathname = usePathname();
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const isActive = (href: AppNavItem["href"]) => pathname === href || pathname.startsWith(`${href}/`);
 
   const handleClick = (href: string) => {
     void sendEvent({ type: "nav.header_click", payload: { href, from: pathname } });
@@ -37,7 +27,7 @@ export default function AppHeader() {
         <p className="text-sm text-[color:var(--color-text-muted)]">会計書類の安心ルート</p>
       </div>
       <nav aria-label="グローバルナビ" className="flex flex-wrap items-center gap-2 text-sm md:gap-4">
-        {navItems.map((item) => (
+        {appNavItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
