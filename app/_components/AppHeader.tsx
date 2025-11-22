@@ -2,41 +2,67 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { sendEvent } from "@/lib/analytics-client";
 
 const navItems = [
-  { label: "Home", href: "/home" },
-  { label: "Upload", href: "/mobile/upload" },
-  { label: "Review", href: "/pc/review" },
-  { label: "TB", href: "/pc/trial_balance" },
-  { label: "Rating", href: "/pc/rating" },
-  { label: "Schedule", href: "/pc/schedule" },
-  { label: "Settings", href: "/settings/company" },
-  { label: "Manual", href: "/manual" },
+  { label: "ホーム", href: "/mobile" },
+  { label: "アップロード", href: "/mobile/upload" },
+  { label: "タスク", href: "/mobile/tasks" },
+  { label: "チャット", href: "/mobile/chat" },
+  { label: "プロフィール", href: "/mobile/profile" },
+  { label: "会社設定", href: "/settings/company" },
+  { label: "マニュアル", href: "/manual" },
 ];
 
 export default function AppHeader() {
   const pathname = usePathname();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   const handleClick = (href: string) => {
     void sendEvent({ type: "nav.header_click", payload: { href, from: pathname } });
+    setIsMenuOpen(false);
   };
+
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [pathname]);
 
   return (
     <header className="shell-header" role="banner">
       <a href="#main" className="skip-link">
         メインコンテンツへスキップ
       </a>
-      <div>
-        <Link href="/home" className="font-semibold tracking-wide">
-          CLAS-Z
-        </Link>
-        <p className="text-sm text-[color:var(--color-text-muted)]">会計書類の安心ルート</p>
+      <div className="header-top">
+        <div>
+          <Link href="/home" className="font-semibold tracking-wide">
+            CLAS-Z
+          </Link>
+          <p className="text-sm text-[color:var(--color-text-muted)]">会計書類の安心ルート</p>
+        </div>
+        <button
+          type="button"
+          className="header-toggle"
+          aria-expanded={isMenuOpen}
+          aria-controls="global-nav"
+          onClick={() => setIsMenuOpen((prev) => !prev)}
+        >
+          <span aria-hidden className="header-toggle-icon">
+            <span />
+            <span />
+            <span />
+          </span>
+          <span className="text-sm">メニュー</span>
+        </button>
       </div>
-      <nav aria-label="グローバルナビ" className="flex flex-wrap items-center gap-2 text-sm md:gap-4">
+      <nav
+        id="global-nav"
+        aria-label="グローバルナビ"
+        className={`header-nav text-sm ${isMenuOpen ? "is-open" : ""}`}
+      >
         {navItems.map((item) => (
           <Link
             key={item.href}

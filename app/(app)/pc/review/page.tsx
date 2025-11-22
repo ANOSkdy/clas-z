@@ -84,7 +84,7 @@ export default async function PcReviewPage({ searchParams }: { searchParams: Pag
 
   return (
     <section className="space-y-6" aria-labelledby="pc-review-heading">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-[color:var(--color-text-muted)]">review</p>
           <h1 id="pc-review-heading" className="text-2xl font-semibold">
@@ -94,7 +94,11 @@ export default async function PcReviewPage({ searchParams }: { searchParams: Pag
             DataGrid で Documents をキーボード操作 / サーバーフィルタ込みで追い込みます。
           </p>
         </div>
-        <Link href="/pc" className="btn btn-secondary text-sm" aria-label="PC ホームに戻る">
+        <Link
+          href="/pc"
+          className="btn btn-secondary text-sm w-full sm:w-auto"
+          aria-label="PC ホームに戻る"
+        >
           戻る
         </Link>
       </div>
