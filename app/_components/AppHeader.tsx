@@ -7,14 +7,13 @@ import { useEffect, useState } from "react";
 import { sendEvent } from "@/lib/analytics-client";
 
 const navItems = [
-  { label: "Home", href: "/home" },
-  { label: "Upload", href: "/mobile/upload" },
-  { label: "Review", href: "/pc/review" },
-  { label: "TB", href: "/pc/trial_balance" },
-  { label: "Rating", href: "/pc/rating" },
-  { label: "Schedule", href: "/pc/schedule" },
-  { label: "Settings", href: "/settings/company" },
-  { label: "Manual", href: "/manual" },
+  { label: "ホーム", href: "/mobile" },
+  { label: "アップロード", href: "/mobile/upload" },
+  { label: "タスク", href: "/mobile/tasks" },
+  { label: "チャット", href: "/mobile/chat" },
+  { label: "プロフィール", href: "/mobile/profile" },
+  { label: "会社設定", href: "/settings/company" },
+  { label: "マニュアル", href: "/manual" },
 ];
 
 export default function AppHeader() {
