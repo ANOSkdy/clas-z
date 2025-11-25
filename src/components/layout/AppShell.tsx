@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import Link from 'next/link';
@@ -14,7 +14,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: '/home', label: 'ホーム', icon: '🏠' },
     { href: '/schedule', label: 'スケジュール', icon: '📅' },
-    { href: '/rating', label: '決算格付', icon: '📊' },
+    { href: '/rating', label: '決算書', icon: '📊' },
     { href: '/trial_balance', label: '試算表', icon: '📑' },
     { href: '/settings/company', label: '設定', icon: '⚙️' },
   ];

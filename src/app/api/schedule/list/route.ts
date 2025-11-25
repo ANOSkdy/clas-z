@@ -1,18 +1,50 @@
 ﻿import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
+import { getAirtableBase } from '@/lib/airtable';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  console.log('[API] /api/schedule/list: Request received');
 
-  // Mock Data: 将来は ScheduleItems テーブルから取得
-  // クエリパラメータ (from, to, type) を処理するロジックをここに書く
-  const mockSchedules = [
-    { id: '1', title: 'Withholding Tax Payment (Oct)', dueDate: '2025-11-10', status: 'done', category: 'tax' },
-    { id: '2', title: 'Consumption Tax Interim', dueDate: '2025-11-30', status: 'pending', category: 'tax' },
-    { id: '3', title: 'Social Insurance Premium', dueDate: '2025-11-30', status: 'pending', category: 'social' },
-    { id: '4', title: 'Year-end Adjustment Docs', dueDate: '2025-12-10', status: 'pending', category: 'tax' },
-  ];
+  try {
+    const session = await getSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  return NextResponse.json(mockSchedules);
+    const base = getAirtableBase();
+    if (!base) return NextResponse.json({ error: 'DB Error' }, { status: 500 });
+
+    // 1. 会社名取得
+    let companyName = '';
+    try {
+      const companyRecord = await base('Companies').find(session.companyId);
+      companyName = companyRecord.get('name') as string;
+    } catch (e) {
+      console.error('[API] Company Not Found (Schedule):', e);
+      return NextResponse.json({ error: 'Company record not found' }, { status: 404 });
+    }
+
+    // 2. スケジュール検索
+    const records = await base('Schedules').select({
+      filterByFormula: `{company} = '${companyName}'`,
+      sort: [{ field: 'due_date', direction: 'asc' }]
+    }).all();
+
+    const schedules = records.map(rec => ({
+      id: rec.id,
+      title: rec.get('title'),
+      dueDate: rec.get('due_date'),
+      status: rec.get('status') || 'pending',
+      category: rec.get('category') || 'tax'
+    }));
+
+    return NextResponse.json(schedules);
+
+  } catch (error: any) {
+    console.error('[API] Schedule Error:', error);
+    return NextResponse.json(
+      { error: 'Internal Server Error', details: error.message },
+      { status: 500 }
+    );
+  }
 }

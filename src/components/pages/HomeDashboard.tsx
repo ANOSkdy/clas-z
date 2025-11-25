@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -94,7 +94,7 @@ export default function HomeDashboard() {
         <Link href="/rating">
           <Card className="text-center hover:bg-slate-50 transition-colors h-full flex flex-col justify-center items-center gap-2 py-6">
             <div className="text-2xl">📊</div>
-            <div className="text-sm font-bold text-slate-700">決算格付</div>
+            <div className="text-sm font-bold text-slate-700">決算書</div>
           </Card>
         </Link>
         <Link href="/trial_balance">

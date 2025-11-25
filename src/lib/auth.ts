@@ -1,6 +1,5 @@
 ﻿import { jwtVerify, SignJWT } from 'jose';
 import { cookies } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
 
 const secretKey = process.env.SESSION_SECRET || 'default_secret_key_change_me';
 const key = new TextEncoder().encode(secretKey);
@@ -8,16 +7,16 @@ const key = new TextEncoder().encode(secretKey);
 export type SessionPayload = {
   userId: string;
   role: 'owner' | 'member' | 'admin';
+  companyId: string; // Added for Airtable filtering
   expiresAt: Date;
 };
 
 export async function signSession(payload: Omit<SessionPayload, 'expiresAt'>) {
-  // 30分間有効
-  const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1時間有効
   const session = await new SignJWT({ ...payload, expiresAt })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('30m')
+    .setExpirationTime('1h')
     .sign(key);
   
   return session;

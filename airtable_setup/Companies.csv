@@ -1,0 +1,2 @@
+﻿"name","corporate_number","address","representative_name","fiscal_year_end_month","withholding_tax_type","resident_tax_type","contact_email","last_confirmed_vat"
+"ACME Corp","1234567890123","1-1-1 Tech Valley, Tokyo","John Doe","3","monthly","monthly","admin@example.com","1000000"
