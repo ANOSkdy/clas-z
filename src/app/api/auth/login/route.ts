@@ -16,11 +16,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Airtable is not configured' }, { status: 500 });
     }
 
+    const usersTable = process.env.AIRTABLE_TABLE_USERS || 'Users';
     // 2. 認証ロジック: Airtable Users テーブルで login_id を検索
-    const escapedLoginId = String(loginId).replace(/'/g, "\\'");
-    const records = await base('Users')
+    const escapedLoginId = String(loginId).replace(/"/g, '\\"');
+
+    const records = await base(usersTable)
       .select({
-        filterByFormula: `{login_id} = '${escapedLoginId}'`,
+        filterByFormula: `{login_id} = "${escapedLoginId}"`,
         maxRecords: 1,
       })
       .firstPage();
@@ -30,7 +32,9 @@ export async function POST(request: NextRequest) {
     }
 
     const userRecord = records[0];
-    const storedPassword = userRecord.get('password') as string | undefined;
+    const storedPassword =
+      (userRecord.get('password_hash') as string | undefined) ||
+      (userRecord.get('password') as string | undefined);
 
     // 簡易的に平文チェック
     if (!storedPassword || storedPassword !== password) {
@@ -64,6 +68,17 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Login error:', error);
+    const airtableError = error as { statusCode?: number; message?: string };
+    if (airtableError?.statusCode === 404) {
+      return NextResponse.json(
+        {
+          error: 'Airtable table not found. Check AIRTABLE_BASE_ID and table name (Users).',
+          detail: airtableError.message,
+        },
+        { status: 500 },
+      );
+    }
+
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
