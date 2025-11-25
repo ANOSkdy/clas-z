@@ -2,6 +2,8 @@
 import { signSession } from '@/lib/auth';
 import { getAirtableBase } from '@/lib/airtable';
 
+const usersTable = process.env.AIRTABLE_TABLE_USERS || 'Users';
+
 export async function POST(request: NextRequest) {
   try {
     const { loginId, password } = await request.json();
@@ -15,8 +17,6 @@ export async function POST(request: NextRequest) {
     if (!base) {
       return NextResponse.json({ error: 'Airtable is not configured' }, { status: 500 });
     }
-
-    const usersTable = process.env.AIRTABLE_TABLE_USERS || 'Users';
     // 2. 認証ロジック: Airtable Users テーブルで login_id を検索（大小文字・前後空白を吸収）
     const escapedLoginId = String(loginId).trim().replace(/"/g, '\\"');
 
