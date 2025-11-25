@@ -11,42 +11,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'ID and Password are required' }, { status: 400 });
     }
 
-    // 2. 認証ロジック
-    // ※本来は Airtable の Users テーブルを検索し、パスワードハッシュを検証する
-    // ※今回は開発用バックドアとして固定値を許可する
-    let user = null;
-
-    if (loginId === 'admin' && password === 'password') {
-      user = { id: 'mock-admin-id', role: 'owner', name: 'Test Admin' };
-    } else {
-      // Airtable 検索ロジック (接続設定済みの場合のみ動作)
-      const base = getAirtableBase();
-      if (base) {
-        const records = await base('Users').select({
-          filterByFormula: `{login_id} = '${loginId}'`,
-          maxRecords: 1
-        }).firstPage();
-
-        if (records.length > 0) {
-            // TODO: 本番ではここでパスワードハッシュの検証を行う (Argon2など)
-            // 今回は簡易的に平文チェック、またはパスワードフィールドなしで通す想定
-            // const record = records[0];
-            // if (record.get('password') === password) ...
-            
-            // 開発中はAirtableにレコードがあればOKとする（要修正）
-            user = { id: records[0].id, role: records[0].get('role') || 'member' };
-        }
-      }
+    const base = getAirtableBase();
+    if (!base) {
+      return NextResponse.json({ error: 'Airtable is not configured' }, { status: 500 });
     }
 
-    if (!user) {
+    // 2. 認証ロジック: Airtable Users テーブルで login_id を検索
+    const escapedLoginId = String(loginId).replace(/'/g, "\\'");
+    const records = await base('Users')
+      .select({
+        filterByFormula: `{login_id} = '${escapedLoginId}'`,
+        maxRecords: 1,
+      })
+      .firstPage();
+
+    if (records.length === 0) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
+    const userRecord = records[0];
+    const storedPassword = userRecord.get('password') as string | undefined;
+
+    // 簡易的に平文チェック
+    if (!storedPassword || storedPassword !== password) {
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    }
+
+    const role = (userRecord.get('role') as 'owner' | 'member' | 'admin') || 'member';
+    const companyLink = userRecord.get('company') as string[] | undefined;
+    const companyId = companyLink?.[0];
+
+    if (!companyId) {
+      return NextResponse.json({ error: 'Company is not linked to the user' }, { status: 500 });
+    }
+
+    const user = { id: userRecord.id, role, companyId };
+
     // 3. セッション発行
-    // role は型定義に合わせて 'owner' | 'member' | 'admin' にキャスト
-    const role = (user.role as 'owner' | 'member' | 'admin') || 'member';
-    const sessionToken = await signSession({ userId: user.id as string, role });
+    const sessionToken = await signSession({ userId: user.id as string, role, companyId });
 
     // 4. Cookie 設定 (HTTP Only)
     const response = NextResponse.json({ success: true });

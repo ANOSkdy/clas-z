@@ -1,6 +1,5 @@
 ﻿import { jwtVerify, SignJWT } from 'jose';
 import { cookies } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
 
 const secretKey = process.env.SESSION_SECRET || 'default_secret_key_change_me';
 const key = new TextEncoder().encode(secretKey);
@@ -8,6 +7,7 @@ const key = new TextEncoder().encode(secretKey);
 export type SessionPayload = {
   userId: string;
   role: 'owner' | 'member' | 'admin';
+  companyId: string;
   expiresAt: Date;
 };
 
