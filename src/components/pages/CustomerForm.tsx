@@ -1,7 +1,7 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { customerSchema, type CustomerSchema } from '@/lib/validation/customerSchema';
 import { useRouter } from 'next/navigation';
@@ -13,9 +13,9 @@ export default function CustomerForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  
+
   const { register, handleSubmit, reset, formState: { errors } } = useForm<CustomerSchema>({
-    resolver: zodResolver(customerSchema),
+    resolver: zodResolver(customerSchema) as Resolver<CustomerSchema>,
   });
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function CustomerForm() {
       });
   }, [reset]);
 
-  const onSubmit = async (data: CustomerSchema) => {
+  const onSubmit: SubmitHandler<CustomerSchema> = async (data) => {
     setSaving(true);
     await fetch('/api/customer', {
       method: 'PUT',
@@ -67,7 +67,7 @@ export default function CustomerForm() {
               ))}
             </select>
           </div>
-          
+
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-slate-700">源泉所得税 納付特例</label>
             <select {...register('withholdingTaxType')} className="flex h-11 w-full rounded-md border border-slate-300 bg-white px-3 focus-ring">
