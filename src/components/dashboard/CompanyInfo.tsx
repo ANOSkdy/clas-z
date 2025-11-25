@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 
@@ -21,7 +21,7 @@ export default function CompanyInfo() {
         <h2 className="text-xl font-bold text-gray-800">会社情報</h2>
         <button
           onClick={() => setIsEditing(!isEditing)}
-          className={px-4 py-2 rounded-md text-sm font-medium transition-colors \}
+          className="px-4 py-2 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
         >
           {isEditing ? '編集をキャンセル' : '情報を編集'}
         </button>
@@ -77,7 +77,7 @@ export default function CompanyInfo() {
               </div>
             </div>
 
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
               <label className="text-sm font-medium text-gray-600">インボイス登録番号</label>
               <div className="md:col-span-2">
                 {isEditing ? (
@@ -134,15 +134,15 @@ export default function CompanyInfo() {
 
         {isEditing && (
           <div className="mt-8 flex justify-end space-x-3">
-             <button 
+            <button
               onClick={() => setIsEditing(false)}
               className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-             >
-               キャンセル
-             </button>
-             <button className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 shadow-sm">
-               変更を保存
-             </button>
+            >
+              キャンセル
+            </button>
+            <button className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 shadow-sm">
+              変更を保存
+            </button>
           </div>
         )}
       </div>
