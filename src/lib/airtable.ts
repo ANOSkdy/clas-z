@@ -1,7 +1,7 @@
-﻿import Airtable from 'airtable';
+import Airtable from 'airtable';
 
-// 環境変数が設定されていない場合のフォールバック（開発用）
-const apiKey = process.env.AIRTABLE_API_KEY;
+// PAT と旧 API Key の両方を許容する
+const apiKey = process.env.AIRTABLE_TOKEN || process.env.AIRTABLE_API_KEY;
 const baseId = process.env.AIRTABLE_BASE_ID;
 
 // Airtableインスタンスの初期化

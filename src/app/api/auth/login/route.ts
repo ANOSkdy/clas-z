@@ -72,7 +72,8 @@ export async function POST(request: NextRequest) {
     if (airtableError?.statusCode === 404) {
       return NextResponse.json(
         {
-          error: 'Airtable table not found. Check AIRTABLE_BASE_ID and table name (Users).',
+          error:
+            'Airtable table not found. Check AIRTABLE_BASE_ID, table name (Users), and PAT scope for this base.',
           detail: airtableError.message,
         },
         { status: 500 },
