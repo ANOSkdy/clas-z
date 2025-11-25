@@ -1,14 +1,17 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { customerSchema, type CustomerSchema } from '@/lib/validation/customerSchema';
+import { customerSchema } from '@/lib/validation/customerSchema';
+import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+
+type CustomerFormValues = z.input<typeof customerSchema>;
 
 export default function CustomerForm() {
   const router = useRouter();
@@ -16,8 +19,8 @@ export default function CustomerForm() {
   const [saving, setSaving] = useState(false);
   const [currentTerm, setCurrentTerm] = useState<number | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<CustomerSchema>({
+
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
       type: 'corporation',
@@ -29,7 +32,10 @@ export default function CustomerForm() {
 
   const currentType = watch('type');
   const foundingDate = watch('foundingDate');
-  const fiscalMonth = watch('fiscalYearEndMonth');
+  const rawFiscalMonth = watch('fiscalYearEndMonth');
+  const fiscalMonth = rawFiscalMonth !== undefined && rawFiscalMonth !== null
+    ? Number(rawFiscalMonth)
+    : null;
 
   useEffect(() => {
     fetch('/api/customer')
@@ -37,13 +43,13 @@ export default function CustomerForm() {
       .then((data) => {
         // --- 修正箇所: 配列・文字列両対応 ---
         const role = data.currentUserRole;
-        const isAdminUser = Array.isArray(role) 
-          ? role.includes('admin') 
+        const isAdminUser = Array.isArray(role)
+          ? role.includes('admin')
           : role === 'admin';
-        
+
         setIsAdmin(isAdminUser);
         // ----------------------------------
-        
+
         reset({ ...data, type: data.type || 'corporation' });
         setLoading(false);
       });
@@ -56,7 +62,7 @@ export default function CustomerForm() {
   }, [currentType, setValue, isAdmin]);
 
   useEffect(() => {
-    if (!foundingDate || !fiscalMonth) {
+    if (!foundingDate || fiscalMonth === null || Number.isNaN(fiscalMonth)) {
       setCurrentTerm(null);
       return;
     }
@@ -88,7 +94,7 @@ export default function CustomerForm() {
     }
   }, [foundingDate, fiscalMonth]);
 
-  const onSubmit = async (data: CustomerSchema) => {
+  const onSubmit = async (data: CustomerFormValues) => {
     if (!isAdmin) return;
     setSaving(true);
     const res = await fetch('/api/customer', {
@@ -121,7 +127,7 @@ export default function CustomerForm() {
             )}
             {isAdmin && <Badge variant="warning">管理者編集モード</Badge>}
           </div>
-          
+
           {currentTerm && (
             <Badge variant="success" className="text-sm px-3 py-1">
               現在: 第 {currentTerm} 期
@@ -164,54 +170,54 @@ export default function CustomerForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="col-span-1 md:col-span-2">
-            <Input 
-              label={currentType === 'corporation' ? "会社名" : "屋号 / 事業所名"} 
+            <Input
+              label={currentType === 'corporation' ? "会社名" : "屋号 / 事業所名"}
               disabled={!isAdmin}
-              {...register('name')} 
-              error={errors.name?.message} 
+              {...register('name')}
+              error={errors.name?.message}
             />
           </div>
 
           <div className="col-span-1 md:col-span-2">
-            <Input 
-              label="所在地" 
+            <Input
+              label="所在地"
               disabled={!isAdmin}
-              {...register('address')} 
-              error={errors.address?.message} 
+              {...register('address')}
+              error={errors.address?.message}
             />
           </div>
 
           {currentType === 'corporation' && (
-            <Input 
-              label="法人番号 (13桁)" 
+            <Input
+              label="法人番号 (13桁)"
               disabled={!isAdmin}
-              {...register('corporateNumber')} 
-              error={errors.corporateNumber?.message} 
+              {...register('corporateNumber')}
+              error={errors.corporateNumber?.message}
             />
           )}
 
-          <Input 
-            label="代表者名" 
+          <Input
+            label="代表者名"
             disabled={!isAdmin}
-            {...register('representativeName')} 
-            error={errors.representativeName?.message} 
+            {...register('representativeName')}
+            error={errors.representativeName?.message}
           />
 
-          <Input 
-            type="date" 
-            label={currentType === 'corporation' ? "設立年月日" : "開業年月日"} 
+          <Input
+            type="date"
+            label={currentType === 'corporation' ? "設立年月日" : "開業年月日"}
             disabled={!isAdmin}
-            {...register('foundingDate')} 
-            error={errors.foundingDate?.message} 
+            {...register('foundingDate')}
+            error={errors.foundingDate?.message}
           />
 
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-slate-700">
               決算月 {currentType === 'individual' && <Badge variant="outline" className="ml-2">12月固定</Badge>}
             </label>
-            <select 
-              {...register('fiscalYearEndMonth')} 
-              disabled={!isAdmin || currentType === 'individual'} 
+            <select
+              {...register('fiscalYearEndMonth')}
+              disabled={!isAdmin || currentType === 'individual'}
               className="flex h-11 w-full rounded-md border border-slate-300 bg-white px-3 focus-ring disabled:bg-slate-100 disabled:text-slate-500"
             >
               {[...Array(12)].map((_, i) => (
@@ -219,15 +225,15 @@ export default function CustomerForm() {
               ))}
             </select>
           </div>
-          
+
           <div className="col-span-1 md:col-span-2">
              <hr className="border-slate-100 my-2"/>
           </div>
 
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-slate-700">源泉所得税 納付特例</label>
-            <select 
-              {...register('withholdingTaxType')} 
+            <select
+              {...register('withholdingTaxType')}
               disabled={!isAdmin}
               className="flex h-11 w-full rounded-md border border-slate-300 bg-white px-3 focus-ring disabled:bg-slate-100 disabled:text-slate-500"
             >
@@ -238,8 +244,8 @@ export default function CustomerForm() {
 
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-slate-700">住民税 納付特例</label>
-            <select 
-              {...register('residentTaxType')} 
+            <select
+              {...register('residentTaxType')}
               disabled={!isAdmin}
               className="flex h-11 w-full rounded-md border border-slate-300 bg-white px-3 focus-ring disabled:bg-slate-100 disabled:text-slate-500"
             >
@@ -249,11 +255,11 @@ export default function CustomerForm() {
           </div>
 
           <div className="col-span-1 md:col-span-2">
-            <Input 
-              label="通知用メールアドレス" 
+            <Input
+              label="通知用メールアドレス"
               disabled={!isAdmin}
-              {...register('contactEmail')} 
-              error={errors.contactEmail?.message} 
+              {...register('contactEmail')}
+              error={errors.contactEmail?.message}
             />
           </div>
         </div>
@@ -264,7 +270,7 @@ export default function CustomerForm() {
             <Button type="submit" isLoading={saving}>保存する</Button>
           </div>
         )}
-        
+
         {!isAdmin && (
            <div className="pt-4 flex justify-center border-t mt-4">
             <Button type="button" variant="outline" onClick={() => router.back()} className="w-full">
