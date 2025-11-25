@@ -16,10 +16,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'システムエラー: DB未接続' }, { status: 500 });
     }
 
-    const records = await base('Users').select({
-      filterByFormula: `{login_id} = '${loginId}'`,
-      maxRecords: 1
-    }).firstPage();
+    let records;
+    try {
+      records = await base('Users').select({
+        filterByFormula: `{login_id} = '${loginId}'`,
+        maxRecords: 1
+      }).firstPage();
+    } catch (err: any) {
+      console.error('[Login] Airtable query failed:', err);
+
+      // Airtable の 404（NOT_FOUND）はテーブル名や Base ID の不整合が原因
+      if (err?.statusCode === 404 || err?.error === 'NOT_FOUND') {
+        return NextResponse.json({
+          error: 'ユーザーテーブルにアクセスできません。Airtable の Base ID とテーブル名（Users）を確認してください。'
+        }, { status: 500 });
+      }
+
+      return NextResponse.json({ error: 'データベースエラーが発生しました' }, { status: 500 });
+    }
 
     if (records.length === 0) {
       return NextResponse.json({ error: 'IDまたはパスワードが間違っています' }, { status: 401 });
