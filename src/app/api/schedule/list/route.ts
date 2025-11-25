@@ -10,11 +10,12 @@ export async function GET() {
   if (!base) {
     return NextResponse.json({ error: 'Airtable is not configured' }, { status: 500 });
   }
+  const schedulesTable = process.env.AIRTABLE_TABLE_SCHEDULES || 'Schedules';
 
   try {
-    const records = await base('Schedules')
+    const records = await base(schedulesTable)
       .select({
-        filterByFormula: `{company} = '${session.companyId}'`,
+        filterByFormula: `TRIM({company}) = '${session.companyId}'`,
       })
       .firstPage();
 

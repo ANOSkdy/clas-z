@@ -10,19 +10,21 @@ export async function GET() {
   if (!base) {
     return NextResponse.json({ error: 'Airtable is not configured' }, { status: 500 });
   }
+  const alertsTable = process.env.AIRTABLE_TABLE_ALERTS || 'Alerts';
+  const schedulesTable = process.env.AIRTABLE_TABLE_SCHEDULES || 'Schedules';
 
   try {
     const [alertsRecords, scheduleRecords] = await Promise.all([
-      base('Alerts')
+      base(alertsTable)
         .select({
-          filterByFormula: `{company} = '${session.companyId}'`,
+          filterByFormula: `TRIM({company}) = '${session.companyId}'`,
           sort: [{ field: 'date', direction: 'desc' }],
           maxRecords: 5,
         })
         .firstPage(),
-      base('Schedules')
+      base(schedulesTable)
         .select({
-          filterByFormula: `{company} = '${session.companyId}'`,
+          filterByFormula: `TRIM({company}) = '${session.companyId}'`,
           sort: [{ field: 'due_date', direction: 'asc' }],
           maxRecords: 5,
         })

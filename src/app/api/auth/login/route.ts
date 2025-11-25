@@ -17,12 +17,12 @@ export async function POST(request: NextRequest) {
     }
 
     const usersTable = process.env.AIRTABLE_TABLE_USERS || 'Users';
-    // 2. 認証ロジック: Airtable Users テーブルで login_id を検索
-    const escapedLoginId = String(loginId).replace(/"/g, '\\"');
+    // 2. 認証ロジック: Airtable Users テーブルで login_id を検索（大小文字・前後空白を吸収）
+    const escapedLoginId = String(loginId).trim().replace(/"/g, '\\"');
 
     const records = await base(usersTable)
       .select({
-        filterByFormula: `{login_id} = "${escapedLoginId}"`,
+        filterByFormula: `LOWER(TRIM({login_id})) = LOWER("${escapedLoginId}")`,
         maxRecords: 1,
       })
       .firstPage();
@@ -68,12 +68,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Login error:', error);
-    const airtableError = error as { statusCode?: number; message?: string };
+    const airtableError = error as { statusCode?: number; message?: string; error?: string };
     if (airtableError?.statusCode === 404) {
       return NextResponse.json(
         {
           error:
-            'Airtable table not found. Check AIRTABLE_BASE_ID, table name (Users), and PAT scope for this base.',
+            `Airtable table not found. Check AIRTABLE_BASE_ID, table name (${usersTable}), and PAT scope for this base.`,
           detail: airtableError.message,
         },
         { status: 500 },

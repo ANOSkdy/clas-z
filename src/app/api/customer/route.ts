@@ -12,9 +12,10 @@ export async function GET() {
   if (!base) {
     return NextResponse.json({ error: 'Airtable is not configured' }, { status: 500 });
   }
+  const companiesTable = process.env.AIRTABLE_TABLE_COMPANIES || 'Companies';
 
   try {
-    const companyRecord = await base('Companies').find(session.companyId);
+    const companyRecord = await base(companiesTable).find(session.companyId);
     const fields = companyRecord.fields;
 
     return NextResponse.json({
@@ -41,12 +42,14 @@ export async function PUT(request: NextRequest) {
   if (!base) {
     return NextResponse.json({ error: 'Airtable is not configured' }, { status: 500 });
   }
+  const companiesTable = process.env.AIRTABLE_TABLE_COMPANIES || 'Companies';
+  const alertsTable = process.env.AIRTABLE_TABLE_ALERTS || 'Alerts';
 
   try {
     const body = await request.json();
     const validatedData = customerSchema.parse(body);
 
-    const currentRecord = await base('Companies').find(session.companyId);
+    const currentRecord = await base(companiesTable).find(session.companyId);
     const currentFields = currentRecord.fields;
 
     const updatePayload = {
@@ -60,7 +63,7 @@ export async function PUT(request: NextRequest) {
       contactEmail: validatedData.contactEmail,
     } as const;
 
-    const updatedRecord = await base('Companies').update(session.companyId, updatePayload);
+    const updatedRecord = await base(companiesTable).update(session.companyId, updatePayload);
 
     const registrationChanged =
       updatePayload.name !== (currentFields.name as string) ||
@@ -68,7 +71,7 @@ export async function PUT(request: NextRequest) {
       updatePayload.representativeName !== (currentFields.representativeName as string);
 
     if (registrationChanged) {
-      await base('Alerts').create({
+      await base(alertsTable).create({
         title: '登記情報が変更されました',
         type: 'info',
         date: new Date().toISOString(),
