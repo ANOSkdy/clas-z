@@ -1,11 +1,27 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getSession, isAuthBypassEnabled } from '@/lib/auth';
 import { getAirtableBase } from '@/lib/airtable';
 import { customerSchema } from '@/lib/validation/customerSchema';
 
 export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  if (isAuthBypassEnabled()) {
+    return NextResponse.json({
+      type: 'corporation',
+      name: 'クラズ合同会社（デモ）',
+      corporateNumber: '0000000000000',
+      address: '東京都渋谷区渋谷1-1-1',
+      representativeName: '山田 太郎',
+      foundingDate: '2020-04-01',
+      fiscalYearEndMonth: '3',
+      withholdingTaxType: 'general',
+      residentTaxType: 'regular',
+      contactEmail: 'demo@example.com',
+      currentUserRole: session.role
+    });
+  }
 
   const base = getAirtableBase();
   if (!base) return NextResponse.json({ error: 'DB Error' }, { status: 500 });
@@ -37,6 +53,10 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  if (isAuthBypassEnabled()) {
+    return NextResponse.json({ success: true, mode: 'bypass' });
+  }
 
   // --- 修正箇所: 配列・文字列両対応の権限チェック ---
   const userRole = Array.isArray(session.role) ? session.role[0] : session.role;

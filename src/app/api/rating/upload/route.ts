@@ -1,5 +1,5 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getSession, isAuthBypassEnabled } from '@/lib/auth';
 import { uploadToDrive } from '@/lib/google/drive';
 
 // 4.5MB制限の注意書き: Vercel Serverless Function limit
@@ -8,6 +8,15 @@ export const maxDuration = 60; // タイムアウト延長（Proプラン等で�
 export async function POST(request: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  if (isAuthBypassEnabled()) {
+    return NextResponse.json({
+      success: true,
+      fileId: 'demo-file-id',
+      link: '#',
+      mode: 'bypass'
+    });
+  }
 
   try {
     const formData = await request.formData();

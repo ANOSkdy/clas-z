@@ -1,5 +1,5 @@
 ﻿import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getSession, isAuthBypassEnabled } from '@/lib/auth';
 import { getAirtableBase } from '@/lib/airtable';
 
 export const dynamic = 'force-dynamic';
@@ -10,6 +10,14 @@ export async function GET(request: Request) {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    if (isAuthBypassEnabled()) {
+      return NextResponse.json([
+        { id: 'demo-schedule-1', title: '消費税申告', dueDate: '2024-12-10', status: 'pending', category: 'tax' },
+        { id: 'demo-schedule-2', title: '給与支払報告書 提出', dueDate: '2025-01-20', status: 'in_progress', category: 'labor' },
+        { id: 'demo-schedule-3', title: '決算書ドラフト共有', dueDate: '2025-02-05', status: 'upcoming', category: 'accounting' }
+      ]);
+    }
 
     const base = getAirtableBase();
     if (!base) return NextResponse.json({ error: 'DB Error' }, { status: 500 });

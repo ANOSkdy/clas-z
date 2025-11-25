@@ -1,6 +1,6 @@
 import type { FieldSet, Record as AirtableRecord } from 'airtable';
 import { NextRequest, NextResponse } from 'next/server';
-import { signSession } from '@/lib/auth';
+import { getBypassSession, isAuthBypassEnabled, signSession } from '@/lib/auth';
 import { getAirtableBase } from '@/lib/airtable';
 
 interface UserFields extends FieldSet {
@@ -13,6 +13,23 @@ interface UserFields extends FieldSet {
 export async function POST(request: NextRequest) {
   try {
     const { loginId, password } = await request.json();
+
+    if (isAuthBypassEnabled()) {
+      const bypassSession = getBypassSession();
+      if (bypassSession) {
+        const { expiresAt, ...payload } = bypassSession;
+        const sessionToken = await signSession(payload);
+        const response = NextResponse.json({ success: true, mode: 'bypass' });
+        response.cookies.set('session', sessionToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60,
+        });
+        return response;
+      }
+    }
 
     if (!loginId || !password) {
       return NextResponse.json({ error: 'IDとパスワードを入力してください' }, { status: 400 });

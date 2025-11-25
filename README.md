@@ -16,9 +16,15 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🔓 Temporary auth bypass (preview/debug)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+ログインエラーで画面が確認できない場合は、サーバー環境変数 `AUTH_BYPASS=true` を設定すると以下が有効になります。
+
+- middleware によるリダイレクトをスキップし、`/home` 等を直接閲覧可能
+- API はデモ用のモックデータを返却（会社情報・ホームサマリ・スケジュール・決算書アップロード）
+- `/api/auth/login` を叩くとデモセッション Cookie がセットされます
+
+任意で `AUTH_BYPASS_COMPANY_ID` を指定するとセッション内の companyId を上書きできます（デモレスポンスは固定値）。
 
 ## Learn More
 

@@ -1,9 +1,16 @@
 ﻿import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifySession } from '@/lib/auth';
+import { isAuthBypassEnabled, verifySession } from '@/lib/auth';
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
+
+  if (isAuthBypassEnabled()) {
+    if (path === '/' || path === '/login') {
+      return NextResponse.redirect(new URL('/home', request.url));
+    }
+    return NextResponse.next();
+  }
 
   // 公開ルート定義
   const publicPaths = ['/login', '/api/auth/login', '/api/auth/logout'];

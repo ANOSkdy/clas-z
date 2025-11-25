@@ -1,5 +1,5 @@
 ﻿import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getSession, isAuthBypassEnabled } from '@/lib/auth';
 import { getAirtableBase } from '@/lib/airtable';
 
 export const dynamic = 'force-dynamic';
@@ -12,6 +12,20 @@ export async function GET() {
     if (!session) {
       console.log('[API] Unauthorized: No session');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (isAuthBypassEnabled()) {
+      return NextResponse.json({
+        alerts: [
+          { id: 'demo-alert-1', title: '年末調整の申告期限が近づいています', type: 'warning', date: '2024-12-05' },
+          { id: 'demo-alert-2', title: '社会保険料率が改定されました', type: 'info', date: '2024-11-30' }
+        ],
+        schedules: [
+          { id: 'demo-schedule-1', title: '消費税申告', dueDate: '2024-12-10' },
+          { id: 'demo-schedule-2', title: '給与支払報告書 提出', dueDate: '2025-01-20' },
+          { id: 'demo-schedule-3', title: '決算書ドラフト共有', dueDate: '2025-02-05' }
+        ]
+      });
     }
 
     const base = getAirtableBase();
