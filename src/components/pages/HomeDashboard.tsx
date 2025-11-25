@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 type SummaryData = {
   alerts: Array<{ id: string; title: string; type: string; date: string }>;
@@ -14,13 +15,15 @@ type SummaryData = {
 
 export default function HomeDashboard() {
   const [data, setData] = useState<SummaryData | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     fetch('/api/home/summary')
       .then((res) => res.json())
       .then((d) => setData(d))
-      .catch((e) => console.error(e));
+      .catch((e) => console.error(e))
+      .finally(() => setLoading(false));
   }, []);
 
   const handleLogout = async () => {
@@ -29,86 +32,147 @@ export default function HomeDashboard() {
     router.refresh();
   };
 
+  const alertPlaceholder = (
+    <div className="space-y-2" aria-busy>
+      {[...Array(2)].map((_, idx) => (
+        <Skeleton key={idx} className="h-12 w-full" />
+      ))}
+    </div>
+  );
+
+  const schedulePlaceholder = (
+    <Card className="p-0">
+      <ul className="divide-y divide-slate-100">
+        {[...Array(3)].map((_, idx) => (
+          <li key={idx} className="p-4">
+            <Skeleton className="mb-2 h-4 w-32" />
+            <Skeleton className="h-3 w-24" />
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-slate-800">ホーム</h2>
-        <button onClick={handleLogout} className="text-sm text-slate-500 hover:text-red-600 underline">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.18em] text-slate-500">ダッシュボード</p>
+          <h2 className="text-xl font-bold text-slate-900">ホーム</h2>
+        </div>
+        <Button variant="ghost" size="sm" onClick={handleLogout} aria-label="ログアウト">
           ログアウト
-        </button>
+        </Button>
       </div>
 
-      {/* Notifications */}
-      <section>
-        <h3 className="text-sm font-bold text-slate-500 mb-2 uppercase tracking-wider">お知らせ</h3>
-        <div className="space-y-2">
-          {!data ? (
-            <p className="text-slate-500 text-sm">読み込み中...</p>
-          ) : data.alerts.length === 0 ? (
-            <p className="text-slate-500 text-sm">新しいお知らせはありません。</p>
-          ) : (
-            data.alerts.map((alert) => (
-              <div key={alert.id} className="p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm flex justify-between items-start gap-2">
-                <span className="text-slate-800">{alert.title}</span>
-                <span className="text-slate-500 text-xs whitespace-nowrap">{alert.date}</span>
-              </div>
-            ))
-          )}
+      <Card className="relative overflow-hidden border-none bg-gradient-to-br from-[rgba(221,160,221,0.16)] via-white to-[rgba(240,128,128,0.12)]">
+        <div className="absolute right-2 top-2 h-20 w-20 rounded-full bg-[rgba(144,104,144,0.08)] blur-2xl" aria-hidden />
+        <div className="flex flex-col gap-4">
+          <div>
+            <p className="text-sm font-semibold text-[var(--color-primary-plum-800)]">ようこそ</p>
+            <h3 className="text-lg font-bold text-slate-900 leading-tight">税務・労務・会計の予定と提出物をまとめて確認</h3>
+            <p className="text-sm text-slate-600 mt-2">アップロードや期日が重なる週も、スケジュールとAIのガイドで迷わず進められます。</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Badge className="tab-pill bg-white text-[var(--color-primary-plum-800)] shadow-sm">
+              自動スケジュール連携
+            </Badge>
+            <Badge className="tab-pill bg-white text-[var(--color-primary-plum-800)] shadow-sm">
+              アップロード管理
+            </Badge>
+            <Badge className="tab-pill bg-white text-[var(--color-primary-plum-800)] shadow-sm">
+              スマホ最適化
+            </Badge>
+          </div>
         </div>
+      </Card>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold tracking-wide text-slate-700">お知らせ</h3>
+          <span className="text-xs font-medium text-slate-500">リアルタイム更新</span>
+        </div>
+        {!data && loading && alertPlaceholder}
+        {data && data.alerts.length === 0 && (
+          <div className="rounded-lg border border-dashed border-[rgba(144,104,144,0.4)] bg-[rgba(144,104,144,0.04)] p-4 text-sm text-slate-600">
+            新しいお知らせはありません。
+          </div>
+        )}
+        {data && data.alerts.length > 0 && (
+          <div className="space-y-3">
+            {data.alerts.map((alert) => (
+              <div
+                key={alert.id}
+                className="interactive-transition flex items-start justify-between gap-3 rounded-lg border border-[rgba(17,17,17,0.05)] bg-white/90 px-4 py-3 shadow-[0_10px_30px_-16px_rgba(108,78,108,0.18)]"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 h-9 w-9 rounded-xl bg-[rgba(240,128,128,0.12)] text-lg">📌</div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{alert.title}</p>
+                    <p className="text-xs text-slate-500">{alert.type}</p>
+                  </div>
+                </div>
+                <span className="text-xs font-semibold text-slate-500">{alert.date}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
-      {/* Schedule */}
-      <section>
-        <div className="flex justify-between items-end mb-2">
-          <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">直近のスケジュール</h3>
-          <Link href="/schedule" className="text-blue-600 text-xs hover:underline font-medium">
-            すべて見る &rarr;
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold tracking-wide text-slate-700">直近のスケジュール</h3>
+          <Link href="/schedule" className="text-xs font-semibold text-[var(--color-primary-plum-800)] underline-offset-4 hover:underline">
+            すべて見る ↗
           </Link>
         </div>
-        <Card className="p-0 overflow-hidden">
-          {!data ? (
-            <div className="p-4 text-sm text-slate-500">読み込み中...</div>
-          ) : data.schedules.length === 0 ? (
-            <div className="p-4 text-sm text-slate-500">予定はありません。</div>
-          ) : (
+        {!data && loading && schedulePlaceholder}
+        {data && data.schedules.length === 0 && (
+          <Card className="text-sm text-slate-600">予定はありません。</Card>
+        )}
+        {data && data.schedules.length > 0 && (
+          <Card className="p-0">
             <ul className="divide-y divide-slate-100">
               {data.schedules.map((sch) => (
-                <li key={sch.id} className="p-4 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                  <span className="font-medium text-slate-800 text-sm">{sch.title}</span>
-                  <Badge variant="danger">{sch.dueDate}</Badge>
+                <li
+                  key={sch.id}
+                  className="interactive-transition flex items-center justify-between gap-3 p-4 hover:bg-[rgba(144,104,144,0.04)]"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{sch.title}</p>
+                    <p className="text-xs text-slate-500">{sch.dueDate}</p>
+                  </div>
+                  <Badge variant="danger" className="rounded-full bg-[rgba(144,104,144,0.08)] text-[var(--color-primary-plum-800)]">
+                    期日
+                  </Badge>
                 </li>
               ))}
             </ul>
-          )}
-        </Card>
+          </Card>
+        )}
       </section>
 
-      {/* Quick Actions */}
-      <section className="grid grid-cols-2 gap-4">
-        <Link href="/customer/edit">
-          <Card className="text-center hover:bg-slate-50 transition-colors h-full flex flex-col justify-center items-center gap-2 py-6">
-            <div className="text-2xl">🏢</div>
-            <div className="text-sm font-bold text-slate-700">会社情報</div>
-          </Card>
-        </Link>
-        <Link href="/rating">
-          <Card className="text-center hover:bg-slate-50 transition-colors h-full flex flex-col justify-center items-center gap-2 py-6">
-            <div className="text-2xl">📊</div>
-            <div className="text-sm font-bold text-slate-700">決算書</div>
-          </Card>
-        </Link>
-        <Link href="/trial_balance">
-          <Card className="text-center hover:bg-slate-50 transition-colors h-full flex flex-col justify-center items-center gap-2 py-6">
-            <div className="text-2xl">📑</div>
-            <div className="text-sm font-bold text-slate-700">試算表</div>
-          </Card>
-        </Link>
-        <Link href="/manual">
-          <Card className="text-center hover:bg-slate-50 transition-colors h-full flex flex-col justify-center items-center gap-2 py-6">
-            <div className="text-2xl">📘</div>
-            <div className="text-sm font-bold text-slate-700">マニュアル</div>
-          </Card>
-        </Link>
+      <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {[
+          { href: '/customer/edit', icon: '🏢', title: '会社情報', desc: '最新の住所・担当者に更新' },
+          { href: '/rating', icon: '📊', title: '決算書', desc: 'PDF/CSV を安全に共有' },
+          { href: '/trial_balance', icon: '📑', title: '試算表', desc: '共有とメール送付' },
+          { href: '/manual', icon: '📘', title: 'マニュアル', desc: '手順の確認' },
+        ].map((action) => (
+          <Link key={action.href} href={action.href} className="focus:outline-none">
+            <Card className="h-full text-left">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[rgba(144,104,144,0.1)] text-xl">
+                  {action.icon}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">{action.title}</p>
+                  <p className="text-xs text-slate-500">{action.desc}</p>
+                </div>
+              </div>
+            </Card>
+          </Link>
+        ))}
       </section>
     </div>
   );

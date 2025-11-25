@@ -1,4 +1,5 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import type { Record as AirtableRecord } from 'airtable';
+import { NextRequest, NextResponse } from 'next/server';
 import { signSession } from '@/lib/auth';
 import { getAirtableBase } from '@/lib/airtable';
 
@@ -16,20 +17,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'システムエラー: DB未接続' }, { status: 500 });
     }
 
-    let records;
+    let records: AirtableRecord<unknown>[];
     try {
-      records = await base('Users').select({
-        filterByFormula: `{login_id} = '${loginId}'`,
-        maxRecords: 1
-      }).firstPage();
-    } catch (err: any) {
+      records = await base('Users')
+        .select({
+          filterByFormula: `{login_id} = '${loginId}'`,
+          maxRecords: 1,
+        })
+        .firstPage();
+    } catch (err: unknown) {
       console.error('[Login] Airtable query failed:', err);
 
-      // Airtable の 404（NOT_FOUND）はテーブル名や Base ID の不整合が原因
-      if (err?.statusCode === 404 || err?.error === 'NOT_FOUND') {
-        return NextResponse.json({
-          error: 'ユーザーテーブルにアクセスできません。Airtable の Base ID とテーブル名（Users）を確認してください。'
-        }, { status: 500 });
+      const statusCode = typeof err === 'object' && err !== null && 'statusCode' in err ? (err as { statusCode?: number }).statusCode : undefined;
+      const errorCode = typeof err === 'object' && err !== null && 'error' in err ? (err as { error?: string }).error : undefined;
+
+      if (statusCode === 404 || errorCode === 'NOT_FOUND') {
+        return NextResponse.json(
+          {
+            error: 'ユーザーテーブルにアクセスできません。Airtable の Base ID とテーブル名（Users）を確認してください。',
+          },
+          { status: 500 }
+        );
       }
 
       return NextResponse.json({ error: 'データベースエラーが発生しました' }, { status: 500 });
@@ -40,8 +48,8 @@ export async function POST(request: NextRequest) {
     }
 
     const userRecord = records[0];
-    const storedPassword = userRecord.get('password_hash') as string; 
-    
+    const storedPassword = userRecord.get('password_hash') as string;
+
     if (storedPassword !== password) {
       return NextResponse.json({ error: 'IDまたはパスワードが間違っています' }, { status: 401 });
     }
@@ -61,10 +69,10 @@ export async function POST(request: NextRequest) {
     const role = (rawRole as 'owner' | 'member' | 'admin') || 'member';
     // -------------------------------------
 
-    const sessionToken = await signSession({ 
-      userId: userRecord.id as string, 
+    const sessionToken = await signSession({
+      userId: userRecord.id as string,
       role,
-      companyId
+      companyId,
     });
 
     const response = NextResponse.json({ success: true });
@@ -77,7 +85,6 @@ export async function POST(request: NextRequest) {
     });
 
     return response;
-
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

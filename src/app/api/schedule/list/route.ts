@@ -40,10 +40,11 @@ export async function GET(request: Request) {
 
     return NextResponse.json(schedules);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[API] Schedule Error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Internal Server Error', details: error.message },
+      { error: 'Internal Server Error', details: message },
       { status: 500 }
     );
   }

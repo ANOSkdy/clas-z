@@ -1,4 +1,4 @@
-﻿import * as React from 'react';
+import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -8,12 +8,13 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, label, error, id, ...props }, ref) => {
-    const inputId = id || React.useId();
+    const generatedId = React.useId();
+    const inputId = id ?? generatedId;
 
     return (
       <div className="w-full space-y-1.5">
         {label && (
-          <label htmlFor={inputId} className="block text-sm font-medium text-slate-700">
+          <label htmlFor={inputId} className="block text-sm font-semibold text-slate-800">
             {label}
           </label>
         )}
@@ -21,14 +22,19 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           id={inputId}
           ref={ref}
           className={cn(
-            'flex h-11 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus-ring',
-            error && 'border-red-500 focus:ring-red-500',
+            'flex h-11 w-full rounded-lg border border-[rgba(17,17,17,0.12)] bg-white px-3 py-2 text-sm placeholder:text-slate-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] focus-visible:border-[var(--color-primary-plum-700)] focus-visible:ring-2 focus-visible:ring-[color:var(--color-primary-plum-700)] focus-visible:ring-offset-2',
+            error && 'border-[var(--color-danger)] focus-visible:ring-[color:var(--color-danger)]',
             className
           )}
           aria-invalid={!!error}
+          aria-describedby={error ? `${inputId}-error` : undefined}
           {...props}
         />
-        {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+        {error && (
+          <p id={`${inputId}-error`} className="text-xs font-medium text-[var(--color-danger)]">
+            {error}
+          </p>
+        )}
       </div>
     );
   }

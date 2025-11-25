@@ -60,10 +60,11 @@ export async function GET() {
     console.log('[API] Home Summary Success. Alerts:', alerts.length, 'Schedules:', schedules.length);
     return NextResponse.json({ alerts, schedules });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[API] Summary Critical Error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Internal Server Error', details: error.message },
+      { error: 'Internal Server Error', details: message },
       { status: 500 }
     );
   }

@@ -1,4 +1,5 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import type { SendMailOptions } from 'nodemailer';
+import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { getFileStream } from '@/lib/google/drive';
 
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const mailOptions: any = {
+    const mailOptions: SendMailOptions = {
       from: process.env.MAIL_FROM_ADDRESS,
       to,
       subject,
@@ -44,8 +45,7 @@ export async function POST(request: NextRequest) {
 
     await transporter.sendMail(mailOptions);
     return NextResponse.json({ success: true });
-
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Mail send error:', error);
     return NextResponse.json({ error: 'Failed to send mail' }, { status: 500 });
   }
