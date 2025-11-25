@@ -1,26 +1,39 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
+
+@theme {
+  --color-primary: #1d4ed8;
+  --color-primary-fg: #ffffff;
+  --color-danger: #ef4444;
+}
+
+/* Tailwind v4ではCSS変数定義は標準のCSS構文(:root)で行います。
+  @theme ブロックで定義した変数はTailwindの設定として取り込まれますが、
+  ここでは既存の変数設計に合わせて :root 定義も維持します。
+*/
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --foreground: #0f172a; /* Slate-900 */
+  --muted: #f1f5f9;      /* Slate-100 */
+  --muted-fg: #64748b;   /* Slate-500 */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* 必要に応じてダークモード変数を定義 */
   }
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--background);
+  font-family: system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer utilities {
+  /* 共通フォーカスリング */
+  .focus-ring {
+    @apply outline-none ring-2 ring-offset-2 ring-blue-600;
+  }
 }
