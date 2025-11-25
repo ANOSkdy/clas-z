@@ -1,7 +1,14 @@
-import type { Record as AirtableRecord } from 'airtable';
+import type { FieldSet, Record as AirtableRecord } from 'airtable';
 import { NextRequest, NextResponse } from 'next/server';
 import { signSession } from '@/lib/auth';
 import { getAirtableBase } from '@/lib/airtable';
+
+interface UserFields extends FieldSet {
+  login_id?: string;
+  password_hash?: string;
+  company?: string[];
+  role?: string | string[];
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,14 +24,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'システムエラー: DB未接続' }, { status: 500 });
     }
 
-    let records: AirtableRecord<unknown>[];
+    let records: AirtableRecord<UserFields>[] = [];
     try {
-      records = await base('Users')
+      const fetchedRecords = await base<UserFields>('Users')
         .select({
           filterByFormula: `{login_id} = '${loginId}'`,
           maxRecords: 1,
         })
         .firstPage();
+      records = [...fetchedRecords];
     } catch (err: unknown) {
       console.error('[Login] Airtable query failed:', err);
 
