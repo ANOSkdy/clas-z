@@ -20,3 +20,14 @@
 ## 暫定対応
 - ログイン API で Airtable 404 を捕捉し、Base ID やテーブル名の不整合を明示的に返すよう修正。
 - まずは Vercel 環境変数を確認し、`Users` テーブルが Base にあることを確認してください。
+
+## Vercel 環境変数デバッグ・チェックリスト
+- Vercel の Environment Variables に以下 3 つが **Development / Preview / Production 全て**で設定されているか確認する
+  - `AIRTABLE_API_KEY`
+  - `AIRTABLE_BASE_ID`
+- `AIRTABLE_ENDPOINT_URL`（未設定時は `https://api.airtable.com` がデフォルトで利用される）
+- Preview/Production の設定変更後は再デプロイして反映を待つ
+- ログイン API 実行時に出る `[AirtableDebug][login]` ログで以下を確認する
+  - `endpoint`, `baseId`, `usersUrl` が期待通りか
+  - `hasApiKey` が `true`、`apiKeyLength` が 0 より大きいこと
+  - API キーの値そのものは出力されないためセキュアに確認できる
