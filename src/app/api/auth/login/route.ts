@@ -1,6 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { signSession } from '@/lib/auth';
-import { getAirtableBase } from '@/lib/airtable';
+import { getAirtableBase, getAirtableConfig } from '@/lib/airtable';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,26 +10,54 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'IDとパスワードを入力してください' }, { status: 400 });
     }
 
-    const base = getAirtableBase();
+    const airtableConfig = getAirtableConfig();
+    const usersUrl = `${airtableConfig.endpointUrl?.replace(/\/$/, '')}/${airtableConfig.baseId ?? 'missing-base-id'}/Users`;
+
+    if (!airtableConfig.apiKey || !airtableConfig.baseId) {
+      console.error('[AirtableConfig][login] Missing Airtable environment variables', {
+        hasApiKey: Boolean(airtableConfig.apiKey),
+        hasBaseId: Boolean(airtableConfig.baseId),
+        endpoint: airtableConfig.endpointUrl,
+      });
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
+    console.log('[AirtableDebug][login]', {
+      endpoint: airtableConfig.endpointUrl,
+      baseId: airtableConfig.baseId,
+      usersUrl,
+      hasApiKey: Boolean(airtableConfig.apiKey),
+      apiKeyLength: airtableConfig.apiKey?.length ?? 0,
+    });
+
+    const base = getAirtableBase(airtableConfig);
     if (!base) {
-      console.error('Airtable connection failed');
+      console.error('[AirtableConfig][login] Airtable connection failed despite env values', {
+        endpoint: airtableConfig.endpointUrl,
+        baseId: airtableConfig.baseId,
+      });
       return NextResponse.json({ error: 'システムエラー: DB未接続' }, { status: 500 });
     }
 
     let records;
     try {
-      records = await base('Users').select({
-        filterByFormula: `{login_id} = '${loginId}'`,
-        maxRecords: 1
-      }).firstPage();
+      records = await base('Users')
+        .select({
+          filterByFormula: `{login_id} = '${loginId}'`,
+          maxRecords: 1,
+        })
+        .firstPage();
     } catch (err: any) {
-      console.error('[Login] Airtable query failed:', err);
+      console.error('[Login] Airtable query failed', {
+        statusCode: err?.statusCode,
+        error: err?.error,
+        message: err?.message,
+        usersUrl,
+      });
 
-      // Airtable の 404（NOT_FOUND）はテーブル名や Base ID の不整合が原因
+      // Airtable の 404（NOT_FOUND）はテーブル名や Base ID の不整合が原因のことが多い
       if (err?.statusCode === 404 || err?.error === 'NOT_FOUND') {
-        return NextResponse.json({
-          error: 'ユーザーテーブルにアクセスできません。Airtable の Base ID とテーブル名（Users）を確認してください。'
-        }, { status: 500 });
+        return NextResponse.json({ error: 'データベースエラーが発生しました' }, { status: 500 });
       }
 
       return NextResponse.json({ error: 'データベースエラーが発生しました' }, { status: 500 });
