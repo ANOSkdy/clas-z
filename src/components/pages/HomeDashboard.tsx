@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 type SummaryData = {
   alerts: Array<{ id: string; title: string; type: string; date: string }>;
@@ -29,53 +30,115 @@ export default function HomeDashboard() {
     router.refresh();
   };
 
+  const isLoading = !data;
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-slate-800">ホーム</h2>
-        <button onClick={handleLogout} className="text-sm text-slate-500 hover:text-red-600 underline">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">ダッシュボード</p>
+          <h2 className="text-2xl font-bold text-slate-900">ホーム</h2>
+          <p className="text-sm text-slate-500">最新の予定とアップロード状況をチェック</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleLogout} aria-label="ログアウト">
           ログアウト
-        </button>
+        </Button>
       </div>
 
+      <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-[rgba(221,160,221,0.08)]">
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">次の提出</p>
+            <h3 className="text-lg font-bold text-slate-900">スケジュールを確認しましょう</h3>
+            <p className="text-sm text-slate-600">
+              期限切れを防ぐための自動リマインダーを有効にしています。
+            </p>
+          </div>
+          <div className="hidden shrink-0 rounded-full bg-[rgba(144,104,144,0.1)] px-4 py-2 text-xs font-semibold text-[var(--color-primary-plum-800)] md:block">
+            リアルタイム同期中
+          </div>
+        </div>
+        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-600">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-[13px] font-semibold text-[var(--color-primary-plum-800)] shadow-sm">
+            🔔 アラート {isLoading ? '—' : data.alerts.length}
+          </span>
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-[13px] font-semibold text-[var(--color-primary-plum-800)] shadow-sm">
+            📅 スケジュール {isLoading ? '—' : data.schedules.length}
+          </span>
+        </div>
+      </Card>
+
       {/* Notifications */}
-      <section>
-        <h3 className="text-sm font-bold text-slate-500 mb-2 uppercase tracking-wider">お知らせ</h3>
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-600">お知らせ</h3>
+          <span className="rounded-full bg-white/70 px-3 py-1 text-[11px] font-semibold text-slate-500 shadow-sm">リアルタイム</span>
+        </div>
         <div className="space-y-2">
-          {!data ? (
-            <p className="text-slate-500 text-sm">読み込み中...</p>
+          {isLoading ? (
+            Array.from({ length: 2 }).map((_, index) => (
+              <Card key={`alert-skeleton-${index}`} className="p-3">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="mt-2 h-3 w-1/3" />
+              </Card>
+            ))
           ) : data.alerts.length === 0 ? (
-            <p className="text-slate-500 text-sm">新しいお知らせはありません。</p>
+            <Card className="p-4 text-sm text-slate-500">新しいお知らせはありません。</Card>
           ) : (
             data.alerts.map((alert) => (
-              <div key={alert.id} className="p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm flex justify-between items-start gap-2">
-                <span className="text-slate-800">{alert.title}</span>
-                <span className="text-slate-500 text-xs whitespace-nowrap">{alert.date}</span>
-              </div>
+              <Card key={alert.id} className="p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-1">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[rgba(240,128,128,0.12)] px-2 py-1 text-[11px] font-semibold text-[var(--color-primary-salmon-800)]">
+                      {alert.type}
+                    </span>
+                    <p className="text-sm font-semibold text-slate-900">{alert.title}</p>
+                  </div>
+                  <span className="text-xs font-medium text-slate-500 whitespace-nowrap">{alert.date}</span>
+                </div>
+              </Card>
             ))
           )}
         </div>
       </section>
 
       {/* Schedule */}
-      <section>
-        <div className="flex justify-between items-end mb-2">
-          <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">直近のスケジュール</h3>
-          <Link href="/schedule" className="text-blue-600 text-xs hover:underline font-medium">
-            すべて見る &rarr;
+      <section className="space-y-3">
+        <div className="flex items-end justify-between">
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-600">直近のスケジュール</h3>
+            <p className="text-xs text-slate-500">期限が近いタスクを優先的に表示します</p>
+          </div>
+          <Link href="/schedule" className="text-[13px] font-semibold text-[var(--color-primary-plum-700)] underline-offset-4 hover:underline">
+            すべて見る →
           </Link>
         </div>
         <Card className="p-0 overflow-hidden">
-          {!data ? (
-            <div className="p-4 text-sm text-slate-500">読み込み中...</div>
+          {isLoading ? (
+            <div className="space-y-3 p-4">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={`schedule-skeleton-${index}`} className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-3/5" />
+                </div>
+              ))}
+            </div>
           ) : data.schedules.length === 0 ? (
             <div className="p-4 text-sm text-slate-500">予定はありません。</div>
           ) : (
             <ul className="divide-y divide-slate-100">
               {data.schedules.map((sch) => (
-                <li key={sch.id} className="p-4 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                  <span className="font-medium text-slate-800 text-sm">{sch.title}</span>
-                  <Badge variant="danger">{sch.dueDate}</Badge>
+                <li key={sch.id} className="group flex items-center justify-between gap-4 p-4 transition-colors duration-150 hover:bg-[rgba(144,104,144,0.04)]">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="default">期限</Badge>
+                      <Badge variant="danger">{sch.dueDate}</Badge>
+                    </div>
+                    <span className="text-sm font-semibold text-slate-900 group-hover:text-[var(--color-primary-plum-800)]">
+                      {sch.title}
+                    </span>
+                  </div>
+                  <span aria-hidden className="text-lg text-slate-300">→</span>
                 </li>
               ))}
             </ul>
@@ -84,31 +147,29 @@ export default function HomeDashboard() {
       </section>
 
       {/* Quick Actions */}
-      <section className="grid grid-cols-2 gap-4">
-        <Link href="/customer/edit">
-          <Card className="text-center hover:bg-slate-50 transition-colors h-full flex flex-col justify-center items-center gap-2 py-6">
-            <div className="text-2xl">🏢</div>
-            <div className="text-sm font-bold text-slate-700">会社情報</div>
-          </Card>
-        </Link>
-        <Link href="/rating">
-          <Card className="text-center hover:bg-slate-50 transition-colors h-full flex flex-col justify-center items-center gap-2 py-6">
-            <div className="text-2xl">📊</div>
-            <div className="text-sm font-bold text-slate-700">決算書</div>
-          </Card>
-        </Link>
-        <Link href="/trial_balance">
-          <Card className="text-center hover:bg-slate-50 transition-colors h-full flex flex-col justify-center items-center gap-2 py-6">
-            <div className="text-2xl">📑</div>
-            <div className="text-sm font-bold text-slate-700">試算表</div>
-          </Card>
-        </Link>
-        <Link href="/manual">
-          <Card className="text-center hover:bg-slate-50 transition-colors h-full flex flex-col justify-center items-center gap-2 py-6">
-            <div className="text-2xl">📘</div>
-            <div className="text-sm font-bold text-slate-700">マニュアル</div>
-          </Card>
-        </Link>
+      <section className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-600">クイックアクセス</h3>
+          <span className="text-[11px] font-medium text-slate-500">アップロード・設定</span>
+        </div>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {[
+            { href: '/customer/edit', icon: '🏢', label: '会社情報' },
+            { href: '/rating', icon: '📊', label: '決算書' },
+            { href: '/trial_balance', icon: '📑', label: '試算表' },
+            { href: '/manual', icon: '📘', label: 'マニュアル' },
+          ].map((item) => (
+            <Link key={item.href} href={item.href} className="focus-visible:outline-none">
+              <Card className="flex h-full flex-col items-center justify-center gap-2 rounded-2xl bg-white/90 py-6 text-center transition-transform hover:-translate-y-[3px] focus-within:translate-y-[-3px]">
+                <div className="text-3xl" aria-hidden>
+                  {item.icon}
+                </div>
+                <div className="text-sm font-semibold text-slate-800">{item.label}</div>
+                <div className="text-[11px] font-medium text-slate-500">開く</div>
+              </Card>
+            </Link>
+          ))}
+        </div>
       </section>
     </div>
   );
