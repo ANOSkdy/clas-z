@@ -1,51 +1,99 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { PageTransition } from './PageTransition';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [isHeaderElevated, setIsHeaderElevated] = useState(false);
+
+  const navItems = useMemo(
+    () => [
+      { href: '/home', label: 'ホーム', icon: '🏠' },
+      { href: '/schedule', label: 'スケジュール', icon: '📅' },
+      { href: '/rating', label: '決算書', icon: '📊' },
+      { href: '/trial_balance', label: '試算表', icon: '📑' },
+      { href: '/settings/company', label: '設定', icon: '⚙️' },
+    ],
+    []
+  );
+
+  const activeIndex = navItems.findIndex((item) => pathname?.startsWith(item.href));
+
+  useEffect(() => {
+    const onScroll = () => setIsHeaderElevated(window.scrollY > 4);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   if (pathname === '/' || pathname === '/login') {
     return <main className="min-h-screen bg-slate-50">{children}</main>;
   }
 
-  const navItems = [
-    { href: '/home', label: 'ホーム', icon: '🏠' },
-    { href: '/schedule', label: 'スケジュール', icon: '📅' },
-    { href: '/rating', label: '決算書', icon: '📊' },
-    { href: '/trial_balance', label: '試算表', icon: '📑' },
-    { href: '/settings/company', label: '設定', icon: '⚙️' },
-  ];
-
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div className="flex min-h-screen flex-col bg-[var(--color-surface)]">
       {/* Header */}
-      <header className="h-14 bg-white border-b border-slate-200 flex items-center px-4 sticky top-0 z-10">
-        <h1 className="font-bold text-lg text-blue-800">CLAS-Z</h1>
+      <header
+        className={cn(
+          'sticky top-0 z-20 flex h-16 items-center justify-between px-4 transition-[height,box-shadow,backdrop-filter] duration-200',
+          'backdrop-blur-md bg-white/90 border-b border-slate-200',
+          isHeaderElevated ? 'h-14 shadow-md' : 'h-16 shadow-sm'
+        )}
+        role="banner"
+      >
+        <div className="flex items-center gap-2">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--color-primary-plum-700)] to-[var(--color-primary-salmon-700)] text-white shadow-[0_8px_24px_rgba(144,104,144,0.25)]">
+            CZ
+          </span>
+          <div className="leading-tight">
+            <p className="text-xs font-semibold text-slate-500">Tax & Labour Portal</p>
+            <p className="text-lg font-bold text-slate-900">CLAS-Z</p>
+          </div>
+        </div>
+        <div aria-hidden className="hidden text-xs font-medium text-slate-500 sm:block">モバイル優先 UI</div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 p-4 pb-24 md:pb-8 max-w-5xl mx-auto w-full">
-        {children}
+      {/* Main Content with page transition */}
+      <main className="relative mx-auto flex w-full max-w-5xl flex-1 px-4 pb-28 pt-4 md:pb-16">
+        <div className="w-full">
+          <PageTransition>{children}</PageTransition>
+        </div>
       </main>
 
       {/* Bottom Navigation (Mobile Only) */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center z-20 md:hidden safe-area-pb">
+      <nav
+        className="safe-area-pb fixed inset-x-0 bottom-0 z-30 flex items-center justify-around gap-1 border-t border-slate-200 bg-white/90 px-2 py-2 shadow-[0_-8px_32px_rgba(17,24,39,0.08)] backdrop-blur-md md:hidden"
+        aria-label="主要ナビゲーション"
+      >
+        <span
+          className={cn('nav-indicator', activeIndex === -1 && 'is-hidden')}
+          style={{ transform: `translateX(${Math.max(activeIndex, 0) * 100}%)` }}
+          aria-hidden
+        />
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname?.startsWith(item.href);
           return (
-            <Link 
+            <Link
               key={item.href}
-              href={item.href} 
+              href={item.href}
+              aria-current={isActive ? 'page' : undefined}
               className={cn(
-                "flex flex-col items-center justify-center w-full h-16 active:bg-slate-50 focus-ring rounded-none",
-                isActive ? "text-blue-700" : "text-slate-500"
+                'relative z-10 flex h-14 flex-1 flex-col items-center justify-center gap-1 rounded-full text-[11px] font-semibold transition-transform duration-200',
+                'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-primary-plum-700)]',
+                isActive ? 'text-white drop-shadow-sm' : 'text-slate-600'
               )}
+              style={{
+                transform: isActive ? 'translateY(-2px)' : 'translateY(0)',
+              }}
             >
-              <span className="text-xl mb-0.5">{item.icon}</span>
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span aria-hidden className="text-xl">
+                {item.icon}
+              </span>
+              <span>{item.label}</span>
+              <span className="sr-only">{isActive ? '現在のタブ' : 'タブを開く'}</span>
             </Link>
           );
         })}
