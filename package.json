@@ -14,7 +14,7 @@
     "clsx": "^2.1.1",
     "googleapis": "^166.0.0",
     "jose": "^6.1.2",
-    "next": "16.0.4",
+    "next": "16.0.7",
     "nodemailer": "^7.0.10",
     "pino": "^10.1.0",
     "pino-pretty": "^13.1.2",
@@ -32,7 +32,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.0.4",
+    "eslint-config-next": "16.0.7",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
