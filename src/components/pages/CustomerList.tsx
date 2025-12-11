@@ -54,7 +54,7 @@ export default function CustomerList() {
         throw new Error('会社の切り替えに失敗しました');
       }
 
-      router.push('/customer/edit');
+      router.push('/home');
     } catch (err) {
       const message = err instanceof Error ? err.message : '会社の切り替えに失敗しました';
       setError(message);
@@ -87,14 +87,13 @@ export default function CustomerList() {
     <div className="space-y-4">
       {companies.map((company) => (
         <Card key={company.id} className="p-4 flex flex-col gap-3">
-          <div className="flex items-center gap-3 justify-between flex-wrap">
-            <div className="flex items-center gap-3">
-              <Badge variant="outline">
-                {company.type === 'individual' ? '個人事業主' : '法人'}
-              </Badge>
-              <h3 className="text-lg font-bold text-slate-800">{company.name}</h3>
-              {company.isCurrent && <Badge variant="success">現在の会社</Badge>}
-            </div>
+            <div className="flex items-center gap-3 justify-between flex-wrap">
+              <div className="flex items-center gap-3">
+                <Badge variant="outline">
+                  {company.type === 'individual' ? '個人事業主' : '法人'}
+                </Badge>
+                <h3 className="text-lg font-bold text-slate-800">{company.name}</h3>
+              </div>
             <Button
               variant="primary"
               className="flex-shrink-0"

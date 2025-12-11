@@ -22,20 +22,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  // ログイン済みかつルート(/)またはログイン画面へのアクセス -> ホームへ
+  // ログイン済みかつルート(/)またはログイン画面へのアクセス -> 会社選択へ
   if (session && (path === '/' || path === '/login')) {
-    return NextResponse.redirect(new URL('/home', request.url));
+    return NextResponse.redirect(new URL('/selectcompany', request.url));
   }
 
-  // /customer/edit へは /customer からのみ遷移可能に制限
-  if (path === '/customer/edit') {
-    const referer = request.headers.get('referer');
-    const origin = request.nextUrl.origin;
-    const customerEntry = `${origin}/customer`;
-
-    if (!referer || !referer.startsWith(customerEntry)) {
-      return NextResponse.redirect(new URL('/customer', request.url));
-    }
+  // /customer/edit へは会社選択済みのユーザーのみ
+  if (path === '/customer/edit' && !session?.companyId) {
+    return NextResponse.redirect(new URL('/selectcompany', request.url));
   }
 
   return NextResponse.next();

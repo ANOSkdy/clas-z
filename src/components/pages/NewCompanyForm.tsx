@@ -59,7 +59,7 @@ export default function NewCompanyForm() {
         throw new Error(message);
       }
 
-      router.push('/customer');
+      router.push('/selectcompany');
     } catch (err) {
       const message = err instanceof Error ? err.message : '会社の登録に失敗しました';
       setError(message);

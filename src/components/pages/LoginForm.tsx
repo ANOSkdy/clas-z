@@ -26,7 +26,7 @@ export default function LoginForm() {
       });
 
       if (res.ok) {
-        router.push('/home');
+        router.push('/selectcompany');
         router.refresh();
       } else {
         const data = await res.json();
