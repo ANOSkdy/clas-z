@@ -118,27 +118,25 @@ export default function CustomerForm() {
     <Card>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="border-b pb-3 mb-5">
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
-              <div className="flex items-center gap-2 whitespace-nowrap text-xs sm:text-sm md:text-base">
-                <h2 className="shrink-0 text-lg font-bold text-slate-800 md:text-xl">基本情報</h2>
-                <div className="flex items-center gap-1.5 text-slate-700">
-                  <span className="text-slate-500 text-xs sm:text-sm">事業形態</span>
-                  <Badge variant="outline" className="px-2 py-1 text-[11px] sm:text-xs">
-                    {currentType === 'individual' ? '個人事業主' : '企業'}
-                  </Badge>
-                </div>
-                {isAdmin && (
-                  <Badge variant="warning" className="px-2.5 py-1 text-[11px] sm:text-xs">
-                    管理者編集モード
-                  </Badge>
-                )}
-                {currentTerm && (
-                  <Badge variant="success" className="px-3 py-1 text-[11px] sm:text-xs md:text-sm">
-                    現在: 第 {currentTerm} 期
-                  </Badge>
-                )}
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <h2 className="text-lg font-bold text-slate-800 md:text-xl">基本情報</h2>
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+              <div className="flex items-center gap-1.5 text-slate-700">
+                <span className="text-slate-500 text-xs sm:text-sm">事業形態</span>
+                <Badge variant="outline" className="px-2 py-1 text-[11px] sm:text-xs">
+                  {currentType === 'individual' ? '個人事業主' : '企業'}
+                </Badge>
               </div>
+              {isAdmin && (
+                <Badge variant="warning" className="px-2.5 py-1 text-[11px] sm:text-xs">
+                  管理者編集モード
+                </Badge>
+              )}
+              {currentTerm && (
+                <Badge variant="success" className="px-3 py-1 text-[11px] sm:text-xs md:text-sm">
+                  現在: 第 {currentTerm} 期
+                </Badge>
+              )}
             </div>
           </div>
         </div>
