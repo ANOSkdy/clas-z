@@ -120,11 +120,12 @@ export default function CustomerForm() {
         <div className="flex justify-between items-center border-b pb-2 mb-4">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-bold text-slate-800">基本情報</h2>
-            {!isAdmin && (
+            <div className="flex items-center gap-2 text-sm text-slate-700">
+              <span className="text-slate-500">事業形態</span>
               <Badge variant="outline">
-                {currentType === 'corporation' ? '法人' : '個人事業主'}
+                {currentType === 'individual' ? '個人事業主' : '企業'}
               </Badge>
-            )}
+            </div>
             {isAdmin && <Badge variant="warning">管理者編集モード</Badge>}
           </div>
 
@@ -135,28 +136,7 @@ export default function CustomerForm() {
           )}
         </div>
 
-        {isAdmin && (
-          <div className="flex p-1 bg-slate-100 rounded-lg mb-6">
-            <button
-              type="button"
-              onClick={() => setValue('type', 'corporation')}
-              className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${
-                currentType === 'corporation' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              法人
-            </button>
-            <button
-              type="button"
-              onClick={() => setValue('type', 'individual')}
-              className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${
-                currentType === 'individual' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              個人事業主
-            </button>
-          </div>
-        )}
+        <input type="hidden" {...register('type')} readOnly />
 
         {currentType === 'individual' && isAdmin && (
           <div className="bg-blue-50 p-3 rounded-md text-sm text-blue-800 border border-blue-100 mb-6">
