@@ -54,7 +54,7 @@ export default function CustomerList() {
         throw new Error('会社の切り替えに失敗しました');
       }
 
-      router.push('/customer/edit');
+      router.push('/home');
     } catch (err) {
       const message = err instanceof Error ? err.message : '会社の切り替えに失敗しました';
       setError(message);

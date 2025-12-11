@@ -22,9 +22,11 @@ export async function GET() {
 
     // 1. 会社IDから会社名を取得
     let companyName = '';
+    let companyType = '';
     try {
       const companyRecord = await base('Companies').find(session.companyId);
       companyName = companyRecord.get('name') as string;
+      companyType = (companyRecord.get('type') as string) || 'corporation';
     } catch (e) {
       console.error('[API] Company Not Found:', e);
       return NextResponse.json({ error: 'Company record not found' }, { status: 404 });
@@ -58,7 +60,11 @@ export async function GET() {
     }));
 
     console.log('[API] Home Summary Success. Alerts:', alerts.length, 'Schedules:', schedules.length);
-    return NextResponse.json({ alerts, schedules });
+    return NextResponse.json({
+      alerts,
+      schedules,
+      company: { name: companyName, type: companyType },
+    });
 
   } catch (error: any) {
     console.error('[API] Summary Critical Error:', error);

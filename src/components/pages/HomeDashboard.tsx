@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 
 type SummaryData = {
+  company: { name: string; type: string };
   alerts: Array<{ id: string; title: string; type: string; date: string }>;
   schedules: Array<{ id: string; title: string; dueDate: string }>;
 };
@@ -32,13 +33,21 @@ export default function HomeDashboard() {
 
   const isLoading = !data;
 
+  const companyLabel = data
+    ? `${data.company.type === 'individual' ? '個人事業主' : '法人'}: ${data.company.name}`
+    : '選択中の事業者を取得中...';
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
-        <div>
+        <div className="space-y-1">
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">ダッシュボード</p>
           <h2 className="text-2xl font-bold text-slate-900">ホーム</h2>
           <p className="text-sm text-slate-500">最新の予定とアップロード状況をチェック</p>
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-[12px] font-semibold text-slate-700 shadow-sm">
+            <span className="text-slate-500">選択中</span>
+            <span className="text-slate-900">{companyLabel}</span>
+          </div>
         </div>
         <Button variant="outline" size="sm" onClick={handleLogout} aria-label="ログアウト">
           ログアウト
