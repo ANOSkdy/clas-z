@@ -22,6 +22,7 @@ export default function CustomerList() {
   const [companies, setCompanies] = useState<CustomerListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectingId, setSelectingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/customer/list')
@@ -38,6 +39,29 @@ export default function CustomerList() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  const handleOpen = async (companyId: string) => {
+    setError(null);
+    setSelectingId(companyId);
+    try {
+      const res = await fetch('/api/customer/select', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId }),
+      });
+
+      if (!res.ok) {
+        throw new Error('会社の切り替えに失敗しました');
+      }
+
+      router.push('/customer/edit');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '会社の切り替えに失敗しました';
+      setError(message);
+    } finally {
+      setSelectingId(null);
+    }
+  };
 
   if (loading) {
     return <div className="p-4 text-center text-slate-500">読み込み中...</div>;
@@ -71,8 +95,13 @@ export default function CustomerList() {
               <h3 className="text-lg font-bold text-slate-800">{company.name}</h3>
               {company.isCurrent && <Badge variant="success">現在の会社</Badge>}
             </div>
-            <Button variant="primary" className="flex-shrink-0" onClick={() => router.push('/customer/edit')}>
-              詳細を開く
+            <Button
+              variant="primary"
+              className="flex-shrink-0"
+              onClick={() => handleOpen(company.id)}
+              disabled={selectingId === company.id}
+            >
+              {selectingId === company.id ? '切り替え中...' : '詳細を開く'}
             </Button>
           </div>
 
