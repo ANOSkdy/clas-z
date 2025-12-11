@@ -154,7 +154,7 @@ export default function HomeDashboard() {
         </div>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
-            { href: '/customer/edit', icon: '🏢', label: '会社情報' },
+            { href: '/customer', icon: '🏢', label: '会社情報' },
             { href: '/rating', icon: '📊', label: '決算書' },
             { href: '/trial_balance', icon: '📑', label: '試算表' },
             { href: '/manual', icon: '📘', label: 'マニュアル' },
