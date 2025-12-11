@@ -42,8 +42,7 @@ export async function POST(request: NextRequest) {
   const { fileId, companyId } = parsedBody.data;
 
   if (companyId && companyId !== session.companyId) {
-    logger.warn({
-      msg: 'Company mismatch detected in finalize request',
+    logger.warn('Company mismatch detected in finalize request', {
       sessionCompanyId: session.companyId,
       bodyCompanyId: companyId,
     });
@@ -68,7 +67,7 @@ export async function POST(request: NextRequest) {
         ratingComment = FALLBACK_COMMENT;
       }
     } catch (error) {
-      logger.error({ err: error }, 'Failed to generate rating comment with Gemini');
+      logger.error('Failed to generate rating comment with Gemini', { err: error });
       ratingComment = FALLBACK_COMMENT;
     }
 
@@ -94,7 +93,7 @@ export async function POST(request: NextRequest) {
       financialStatementId: record.id,
     });
   } catch (error) {
-    logger.error({ err: error }, 'Failed to finalize rating');
+    logger.error('Failed to finalize rating', { err: error });
     return NextResponse.json({ error: 'INTERNAL_SERVER_ERROR' }, { status: 500 });
   }
 }
