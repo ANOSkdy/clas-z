@@ -21,6 +21,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   );
 
   const activeIndex = navItems.findIndex((item) => pathname?.startsWith(item.href));
+  const isHomePath = pathname === '/home';
+  const hideNavIndicator = activeIndex === -1 || isHomePath;
 
   useEffect(() => {
     const onScroll = () => setIsHeaderElevated(window.scrollY > 4);
@@ -69,7 +71,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         aria-label="主要ナビゲーション"
       >
         <span
-          className={cn('nav-indicator', activeIndex === -1 && 'is-hidden')}
+          className={cn('nav-indicator', hideNavIndicator && 'is-hidden')}
           style={{ transform: `translateX(${Math.max(activeIndex, 0) * 100}%)` }}
           aria-hidden
         />
@@ -83,7 +85,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               className={cn(
                 'relative z-10 flex h-14 flex-1 flex-col items-center justify-center gap-1 rounded-full text-[11px] font-semibold transition-transform duration-200',
                 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-primary-plum-700)]',
-                isActive ? 'text-white drop-shadow-sm' : 'text-slate-600'
+                isActive && !hideNavIndicator ? 'text-white drop-shadow-sm' : 'text-slate-600'
               )}
               style={{
                 transform: isActive ? 'translateY(-2px)' : 'translateY(0)',
