@@ -13,7 +13,7 @@ export default function CompanySettingsPage() {
   };
 
   return (
-    <div className="container mx-auto max-w-2xl pb-10 space-y-8">
+    <div className="mx-auto w-full max-w-2xl space-y-8 px-3 pb-10 sm:px-4">
       <BackButton />
       <h1 className="text-2xl font-bold text-slate-800">設定</h1>
       

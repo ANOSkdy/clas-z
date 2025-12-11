@@ -107,11 +107,11 @@ export default function HomeDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
         <div className="space-y-1">
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">ダッシュボード</p>
-          <h2 className="text-2xl font-bold text-slate-900">ホーム</h2>
-          <p className="text-sm text-slate-500">最新の予定とアップロード状況をチェック</p>
+          <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">ホーム</h2>
+          <p className="text-sm text-slate-500 leading-relaxed">最新の予定とアップロード状況をチェック</p>
           <div ref={dropdownRef} className="relative inline-flex items-center">
             <Button
               type="button"
@@ -179,13 +179,19 @@ export default function HomeDashboard() {
             )}
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={handleLogout} aria-label="ログアウト">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleLogout}
+          aria-label="ログアウト"
+          className="w-full sm:w-auto"
+        >
           ログアウト
         </Button>
       </div>
 
       <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-[rgba(221,160,221,0.08)]">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">次の提出</p>
             <h3 className="text-lg font-bold text-slate-900">スケジュールを確認しましょう</h3>
@@ -209,7 +215,7 @@ export default function HomeDashboard() {
 
       {/* Notifications */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-sm font-bold uppercase tracking-wider text-slate-600">お知らせ</h3>
           <span className="rounded-full bg-white/70 px-3 py-1 text-[11px] font-semibold text-slate-500 shadow-sm">リアルタイム</span>
         </div>
@@ -243,12 +249,15 @@ export default function HomeDashboard() {
 
       {/* Schedule */}
       <section className="space-y-3">
-        <div className="flex items-end justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h3 className="text-sm font-bold uppercase tracking-wider text-slate-600">直近のスケジュール</h3>
             <p className="text-xs text-slate-500">期限が近いタスクを優先的に表示します</p>
           </div>
-          <Link href="/schedule" className="text-[13px] font-semibold text-[var(--color-primary-plum-700)] underline-offset-4 hover:underline">
+          <Link
+            href="/schedule"
+            className="text-[13px] font-semibold text-[var(--color-primary-plum-700)] underline-offset-4 hover:underline"
+          >
             すべて見る →
           </Link>
         </div>

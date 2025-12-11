@@ -46,17 +46,12 @@ export default function RatingUploadPanel() {
   return (
     <div className="space-y-6">
       <Card className="space-y-6">
-        <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:bg-slate-50 transition-colors">
-          <input 
-            type="file" 
+        <div className="rounded-lg border-2 border-dashed border-slate-300 p-5 text-center transition-colors hover:bg-slate-50 sm:p-8">
+          <input
+            type="file"
             accept=".pdf,.csv"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
-            className="block w-full text-sm text-slate-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
-              file:text-sm file:font-semibold
-              file:bg-blue-50 file:text-blue-700
-              hover:file:bg-blue-100"
+            className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
           />
           <p className="mt-2 text-xs text-slate-400">PDF または CSV (最大 4MB)</p>
         </div>
@@ -73,7 +68,7 @@ export default function RatingUploadPanel() {
 
       {result && (
         <Card className="bg-slate-50 border-blue-100">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="mb-4 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-4">
             <div className="text-4xl font-bold text-blue-800">{result.grade}</div>
             <div className="text-sm text-slate-600">スコア: <span className="font-bold">{result.score}</span></div>
           </div>
