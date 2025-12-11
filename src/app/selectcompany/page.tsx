@@ -15,8 +15,8 @@ export default function SelectCompanyPage() {
   };
 
   return (
-    <div className="container mx-auto max-w-4xl space-y-6 pb-10">
-      <div className="flex items-center justify-between gap-4">
+    <div className="mx-auto w-full max-w-4xl space-y-6 px-3 pb-10 sm:px-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <Button
           variant="ghost"
           size="sm"
@@ -25,10 +25,10 @@ export default function SelectCompanyPage() {
         >
           <span>ログアウト</span>
         </Button>
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-slate-800">会社・事業者を選択</h1>
-          <Link href="/newcompany">
-            <Button size="sm" variant="secondary">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <h1 className="text-xl font-bold text-slate-800 sm:text-2xl">会社・事業者を選択</h1>
+          <Link href="/newcompany" className="w-full sm:w-auto">
+            <Button size="sm" variant="secondary" className="w-full sm:w-auto">
               新規登録
             </Button>
           </Link>

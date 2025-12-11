@@ -65,9 +65,9 @@ export default function ManualView() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 h-full">
+    <div className="flex h-full flex-col gap-6 md:flex-row">
       {/* Sidebar (List) */}
-      <Card className="w-full md:w-1/4 p-2">
+      <Card className="w-full p-2 md:w-1/3 lg:w-1/4">
         <h3 className="font-bold text-slate-700 mb-2 px-2 text-sm">目次</h3>
         <ul className="space-y-1">
           {manuals.map((m) => (
@@ -91,12 +91,12 @@ export default function ManualView() {
           <ReactMarkdown>{activeManual.content}</ReactMarkdown>
         </div>
 
-        <div className="border-t border-slate-100 pt-6 mt-8">
+        <div className="mt-8 border-t border-slate-100 pt-6">
           <Button
             onClick={handleAiSummary}
             isLoading={loadingAi}
             variant="secondary"
-            className="gap-2"
+            className="w-full gap-2 sm:w-auto"
           >
             <span>✨</span>
             {loadingAi ? 'Geminiが考え中...' : 'AIで要約する'}

@@ -38,7 +38,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Header */}
       <header
         className={cn(
-          'sticky top-0 z-20 flex h-16 items-center justify-between px-4 transition-[height,box-shadow,backdrop-filter] duration-200',
+          'safe-area-pt sticky top-0 z-20 flex h-16 items-center justify-between px-4 transition-[height,box-shadow,backdrop-filter] duration-200',
           'backdrop-blur-md bg-white/90 border-b border-slate-200',
           isHeaderElevated ? 'h-14 shadow-md' : 'h-16 shadow-sm'
         )}
@@ -57,7 +57,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* Main Content with page transition */}
-      <main className="relative mx-auto flex w-full max-w-5xl flex-1 px-4 pb-28 pt-4 md:pb-16">
+      <main className="relative mx-auto flex w-full max-w-5xl flex-1 px-3 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4 sm:px-4 md:pb-20">
         <div className="w-full">
           <PageTransition>{children}</PageTransition>
         </div>
@@ -65,7 +65,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Bottom Navigation (Mobile Only) */}
       <nav
-        className="safe-area-pb fixed inset-x-0 bottom-0 z-30 flex items-center justify-around gap-1 border-t border-slate-200 bg-white/90 px-2 py-2 shadow-[0_-8px_32px_rgba(17,24,39,0.08)] backdrop-blur-md md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around gap-1 border-t border-slate-200 bg-white/90 px-3 pt-2 shadow-[0_-8px_32px_rgba(17,24,39,0.08)] backdrop-blur-md md:hidden"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0.75rem)' }}
         aria-label="主要ナビゲーション"
       >
         <span

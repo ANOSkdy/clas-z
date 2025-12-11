@@ -86,17 +86,17 @@ export default function CustomerList() {
   return (
     <div className="space-y-4">
       {companies.map((company) => (
-        <Card key={company.id} className="p-4 flex flex-col gap-3">
-            <div className="flex items-center gap-3 justify-between flex-wrap">
-              <div className="flex items-center gap-3">
+        <Card key={company.id} className="flex flex-col gap-3 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-3">
                 <Badge variant="outline">
                   {company.type === 'individual' ? '個人事業主' : '法人'}
                 </Badge>
-                <h3 className="text-lg font-bold text-slate-800">{company.name}</h3>
+                <h3 className="text-lg font-bold text-slate-800 leading-snug">{company.name}</h3>
               </div>
             <Button
               variant="primary"
-              className="flex-shrink-0"
+              className="w-full sm:w-auto"
               onClick={() => handleOpen(company.id)}
               disabled={selectingId === company.id}
             >

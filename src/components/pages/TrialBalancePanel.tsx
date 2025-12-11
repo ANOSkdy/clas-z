@@ -56,29 +56,30 @@ export default function TrialBalancePanel() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <h3 className="font-bold text-slate-800 mb-4">1. 試算表アップロード (CSV/PDF)</h3>
+      <Card className="space-y-4">
+        <h3 className="text-lg font-bold text-slate-800 leading-snug">1. 試算表アップロード (CSV/PDF)</h3>
         <input type="file" onChange={handleUpload} className="block w-full text-sm text-slate-500" />
-        {fileId && <p className="text-green-600 text-sm mt-2 font-bold">アップロード完了 (ID: {fileId})</p>}
+        {fileId && <p className="text-sm font-bold text-green-600">アップロード完了 (ID: {fileId})</p>}
       </Card>
 
       {fileId && (
-        <Card>
-          <h3 className="font-bold text-slate-800 mb-4">2. メールで共有</h3>
+        <Card className="space-y-4">
+          <h3 className="text-lg font-bold text-slate-800 leading-snug">2. メールで共有</h3>
           {!emailOpen ? (
-            <Button 
+            <Button
               onClick={() => setEmailOpen(true)}
               variant="secondary"
+              className="w-full sm:w-auto"
             >
               メール作成
             </Button>
           ) : (
             <div className="space-y-4">
-              <Button 
+              <Button
                 onClick={() => setEmailOpen(false)}
                 variant="ghost"
                 size="sm"
-                className="mb-2"
+                className="mb-2 w-full sm:w-auto"
               >
                 閉じる
               </Button>
