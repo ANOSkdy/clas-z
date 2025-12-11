@@ -128,7 +128,7 @@ export default function HomeDashboard() {
             </Button>
             {isDropdownOpen && (
               <div
-                className="absolute left-0 z-10 mt-2 w-72 rounded-2xl border border-slate-100 bg-white p-2 shadow-lg"
+                className="absolute left-0 top-full z-30 mt-3 w-72 rounded-2xl border border-slate-100 bg-white/95 p-2 shadow-xl ring-1 ring-black/5"
                 role="listbox"
                 aria-label="会社を切り替える"
               >
