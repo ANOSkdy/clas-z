@@ -16,7 +16,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       { href: '/schedule', label: 'スケジュール', icon: '📅' },
       { href: '/rating', label: '決算書', icon: '📊' },
       { href: '/trial_balance', label: '試算表', icon: '📑' },
-      { href: '/settings/company', label: '設定', icon: '⚙️' },
     ],
     []
   );
@@ -65,8 +64,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Bottom Navigation (Mobile Only) */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around gap-1 border-t border-slate-200 bg-white/90 px-3 pt-2 shadow-[0_-8px_32px_rgba(17,24,39,0.08)] backdrop-blur-md md:hidden"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0.75rem)' }}
+        className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around gap-1 border-t border-slate-200 bg-white/90 px-3 py-3 shadow-[0_-8px_32px_rgba(17,24,39,0.08)] backdrop-blur-md md:hidden"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1rem)' }}
         aria-label="主要ナビゲーション"
       >
         <span
