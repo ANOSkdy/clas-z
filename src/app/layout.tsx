@@ -6,8 +6,8 @@ export const metadata: Metadata = {
   title: "CLAS-Z",
   description: "Tax & Labor Support System",
   icons: {
-    icon: "/icon.svg",
-    shortcut: "/icon.svg",
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
   },
 };
 
