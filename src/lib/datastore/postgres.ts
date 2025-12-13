@@ -1,7 +1,54 @@
 import { Pool } from '../../../vendor/neon-serverless/index.js';
-import type { Company, CompanyInput, DataStore, User, UserRole } from './types';
+import type {
+  Company,
+  CompanyInput,
+  DataStore,
+  MailLogInput,
+  ManualSection,
+  User,
+  UserRole,
+} from './types';
 
 let pool: Pool | null = null;
+
+type CompanyRow = {
+  id: string;
+  type: string | null;
+  name: string | null;
+  corporate_number: string | null;
+  address: string | null;
+  representative_name: string | null;
+  founding_date: Date | null;
+  fiscal_year_end_month: number | null;
+  withholding_tax_type: string | null;
+  resident_tax_type: string | null;
+  contact_email: string | null;
+};
+
+type ManualSectionRow = {
+  id: string;
+  manual_id: string | null;
+  company_id: string | null;
+  title: string | null;
+  body: string | null;
+  order_index: number | null;
+};
+
+type AlertRow = {
+  id: string;
+  title: string | null;
+  type: string | null;
+  is_read: boolean | null;
+  created_at: Date | null;
+};
+
+type ScheduleRow = {
+  id: string;
+  title: string | null;
+  due_date: Date | null;
+  status: string | null;
+  category: string | null;
+};
 
 const getPool = () => {
   if (typeof window !== 'undefined') {
@@ -9,7 +56,7 @@ const getPool = () => {
   }
   if (!pool) {
     if (!process.env.DATABASE_URL) {
-      throw new Error('DATABASE_URL is not set');
+      throw new Error('DATA_STORE=postgres requires DATABASE_URL');
     }
     pool = new Pool({ connectionString: process.env.DATABASE_URL });
   }
@@ -21,7 +68,7 @@ const normalizeRole = (role: string | null): UserRole => {
   return 'member';
 };
 
-const mapCompanyRow = (row: any): Company => ({
+const mapCompanyRow = (row: CompanyRow): Company => ({
   id: row.id,
   type: row.type,
   name: row.name,
@@ -35,6 +82,15 @@ const mapCompanyRow = (row: any): Company => ({
   contactEmail: row.contact_email,
 });
 
+const mapManualSectionRow = (row: ManualSectionRow): ManualSection => ({
+  id: row.id,
+  manualId: row.manual_id,
+  companyId: row.company_id,
+  title: row.title,
+  body: row.body,
+  orderIndex: row.order_index,
+});
+
 export const getPostgresStore = (): DataStore => {
   return {
     async getUserByLoginId(loginId) {
@@ -46,7 +102,7 @@ export const getPostgresStore = (): DataStore => {
       const user = rows[0];
       if (!user) return null;
 
-      const companyRows = await client.query(
+      const companyRows = await client.query<{ company_id: string }>(
         'SELECT company_id FROM user_companies WHERE user_id = $1',
         [user.id]
       );
@@ -56,7 +112,7 @@ export const getPostgresStore = (): DataStore => {
         loginId: user.login_id,
         passwordHash: user.password_hash ?? '',
         role: normalizeRole(user.role),
-        companyIds: companyRows.rows.map((r: any) => r.company_id),
+        companyIds: companyRows.rows.map((r) => r.company_id),
       } satisfies User;
     },
 
@@ -69,7 +125,7 @@ export const getPostgresStore = (): DataStore => {
       const user = rows[0];
       if (!user) return null;
 
-      const companyRows = await client.query(
+      const companyRows = await client.query<{ company_id: string }>(
         'SELECT company_id FROM user_companies WHERE user_id = $1',
         [user.id]
       );
@@ -79,7 +135,7 @@ export const getPostgresStore = (): DataStore => {
         loginId: user.login_id,
         passwordHash: user.password_hash ?? '',
         role: normalizeRole(user.role),
-        companyIds: companyRows.rows.map((r: any) => r.company_id),
+        companyIds: companyRows.rows.map((r) => r.company_id),
       } satisfies User;
     },
 
@@ -97,7 +153,7 @@ export const getPostgresStore = (): DataStore => {
 
     async getCompanyById(companyId) {
       const client = getPool();
-      const { rows } = await client.query('SELECT * FROM companies WHERE id = $1 LIMIT 1', [companyId]);
+      const { rows } = await client.query<CompanyRow>('SELECT * FROM companies WHERE id = $1 LIMIT 1', [companyId]);
       const row = rows[0];
       if (!row) return null;
       return mapCompanyRow(row);
@@ -108,7 +164,7 @@ export const getPostgresStore = (): DataStore => {
       const connection = await client.connect();
       try {
         await connection.query('BEGIN');
-        const { rows } = await connection.query(
+        const { rows } = await connection.query<CompanyRow>(
           `INSERT INTO companies (
             type, name, corporate_number, address, representative_name, founding_date,
             fiscal_year_end_month, withholding_tax_type, resident_tax_type, contact_email
@@ -176,7 +232,7 @@ export const getPostgresStore = (): DataStore => {
 
     async listAlertsByCompanyId(companyId, options) {
       const client = getPool();
-      const { rows } = await client.query(
+      const { rows } = await client.query<AlertRow>(
         `SELECT id, title, type, is_read, created_at FROM alerts
          WHERE company_id = $1
          ${options?.unreadOnly ? 'AND is_read IS NOT TRUE' : ''}
@@ -184,7 +240,7 @@ export const getPostgresStore = (): DataStore => {
          LIMIT $2`,
         [companyId, options?.limit ?? 5]
       );
-      return rows.map((row: any) => ({
+      return rows.map((row) => ({
         id: row.id,
         title: row.title,
         type: row.type ?? 'info',
@@ -203,9 +259,9 @@ export const getPostgresStore = (): DataStore => {
          ORDER BY due_date ASC NULLS LAST${limit ? ' LIMIT $2' : ''}`;
       if (limit) params.push(limit);
 
-      const { rows } = await client.query(query, params);
+      const { rows } = await client.query<ScheduleRow>(query, params);
 
-      return rows.map((row: any) => ({
+      return rows.map((row) => ({
         id: row.id,
         title: row.title,
         dueDate: row.due_date ? new Date(row.due_date).toISOString().slice(0, 10) : null,
@@ -230,6 +286,38 @@ export const getPostgresStore = (): DataStore => {
           input.uploadedAt ? new Date(input.uploadedAt) : new Date(),
         ]
       );
+      return rows[0].id as string;
+    },
+
+    async listManualSections(companyId) {
+      const client = getPool();
+      const { rows } = await client.query<ManualSectionRow>(
+        `SELECT id, manual_id, company_id, title, body, order_index
+         FROM manual_sections
+         WHERE company_id = $1 OR company_id IS NULL
+         ORDER BY order_index ASC NULLS LAST, created_at ASC`,
+        [companyId]
+      );
+
+      return rows.map(mapManualSectionRow);
+    },
+
+    async createMailLog(log: MailLogInput) {
+      const client = getPool();
+      const { rows } = await client.query(
+        `INSERT INTO mail_logs (company_id, to_email, subject, body, status, sent_at)
+         VALUES ($1, $2, $3, $4, $5, COALESCE($6, NOW()))
+         RETURNING id`,
+        [
+          log.companyId ?? null,
+          log.toEmail ?? null,
+          log.subject ?? null,
+          log.body ?? null,
+          log.status ?? 'queued',
+          log.sentAt ? new Date(log.sentAt) : null,
+        ]
+      );
+
       return rows[0].id as string;
     },
   };

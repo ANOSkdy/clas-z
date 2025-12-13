@@ -9,7 +9,12 @@ export const getDataStore = (): DataStore => {
 
   const mode = (process.env.DATA_STORE ?? 'airtable').toLowerCase();
   if (mode === 'postgres' || mode === 'neon') {
-    store = getPostgresStore();
+    try {
+      store = getPostgresStore();
+    } catch (error) {
+      console.error('[Datastore] Failed to init Postgres store', error);
+      throw error;
+    }
   } else {
     store = getAirtableStore();
   }
