@@ -121,22 +121,30 @@ export const getAirtableStore = (): DataStore => {
 
     async createCompanyForUser(userId, company) {
       const base = ensureBase();
-      const [record] = await base('Companies').create([
+      const companiesTable = base('Companies') as unknown as {
+        create: (
+          records: { fields: Partial<FieldSet> }[],
+        ) => Promise<Record<FieldSet>[] | import('airtable').Records<FieldSet>>;
+      };
+
+      const createdRecords = (await companiesTable.create([
         {
           fields: {
             type: company.type,
             name: company.name,
             corporate_number: company.corporateNumber || undefined,
-            address: company.address,
-            representative_name: company.representativeName,
+            address: company.address || undefined,
+            representative_name: company.representativeName || undefined,
             founding_date: company.foundingDate || undefined,
             fiscal_year_end_month: company.fiscalYearEndMonth ?? undefined,
-            withholding_tax_type: company.withholdingTaxType,
-            resident_tax_type: company.residentTaxType,
-            contact_email: company.contactEmail,
+            withholding_tax_type: company.withholdingTaxType || undefined,
+            resident_tax_type: company.residentTaxType || undefined,
+            contact_email: company.contactEmail || undefined,
           },
         },
-      ]);
+      ])) as unknown as Record<FieldSet>[];
+
+      const [record] = createdRecords;
 
       const userRecord = await base('Users').find(userId);
       const companies = (userRecord.get('company') as string[] | undefined) ?? [];
@@ -148,17 +156,21 @@ export const getAirtableStore = (): DataStore => {
 
     async updateCompany(companyId, updates) {
       const base = ensureBase();
-      await base('Companies').update(companyId, {
+      const companiesTable = base('Companies') as unknown as {
+        update: (id: string, fields: Partial<FieldSet>) => Promise<Record<FieldSet>>;
+      };
+
+      await companiesTable.update(companyId, {
         type: updates.type,
         name: updates.name,
         corporate_number: updates.corporateNumber || undefined,
-        address: updates.address,
-        representative_name: updates.representativeName,
+        address: updates.address || undefined,
+        representative_name: updates.representativeName || undefined,
         founding_date: updates.foundingDate || undefined,
         fiscal_year_end_month: updates.fiscalYearEndMonth ?? undefined,
-        withholding_tax_type: updates.withholdingTaxType,
-        resident_tax_type: updates.residentTaxType,
-        contact_email: updates.contactEmail,
+        withholding_tax_type: updates.withholdingTaxType || undefined,
+        resident_tax_type: updates.residentTaxType || undefined,
+        contact_email: updates.contactEmail || undefined,
       });
     },
 
