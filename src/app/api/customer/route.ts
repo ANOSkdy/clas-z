@@ -1,30 +1,33 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
-import { getAirtableBase } from '@/lib/airtable';
+import { getDataStore } from '@/lib/datastore';
 import { customerSchema } from '@/lib/validation/customerSchema';
 
 export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const base = getAirtableBase();
-  if (!base) return NextResponse.json({ error: 'DB Error' }, { status: 500 });
+  const store = getDataStore();
 
   try {
-    const record = await base('Companies').find(session.companyId);
-    
+    const record = await store.getCompanyById(session.companyId);
+
+    if (!record) {
+      return NextResponse.json({ error: 'Company record not found' }, { status: 404 });
+    }
+
     const data = {
-      type: record.get('type') || 'corporation',
-      name: record.get('name'),
-      corporateNumber: record.get('corporate_number'),
-      address: record.get('address'),
-      representativeName: record.get('representative_name'),
-      foundingDate: record.get('founding_date'),
-      fiscalYearEndMonth: record.get('fiscal_year_end_month'),
-      withholdingTaxType: record.get('withholding_tax_type'),
-      residentTaxType: record.get('resident_tax_type'),
-      contactEmail: record.get('contact_email'),
-      currentUserRole: session.role 
+      type: record.type || 'corporation',
+      name: record.name,
+      corporateNumber: record.corporateNumber,
+      address: record.address,
+      representativeName: record.representativeName,
+      foundingDate: record.foundingDate,
+      fiscalYearEndMonth: record.fiscalYearEndMonth,
+      withholdingTaxType: record.withholdingTaxType,
+      residentTaxType: record.residentTaxType,
+      contactEmail: record.contactEmail,
+      currentUserRole: session.role
     };
 
     return NextResponse.json(data);
@@ -46,28 +49,27 @@ export async function PUT(request: NextRequest) {
   }
   // ------------------------------------------------
 
-  const base = getAirtableBase();
-  if (!base) return NextResponse.json({ error: 'DB Error' }, { status: 500 });
+  const store = getDataStore();
 
   try {
     const body = await request.json();
     const validatedData = customerSchema.parse(body);
     const companyId = session.companyId;
-    
+
     const updateFields = {
       type: validatedData.type,
       name: validatedData.name,
-      corporate_number: validatedData.corporateNumber,
+      corporateNumber: validatedData.corporateNumber || null,
       address: validatedData.address,
-      representative_name: validatedData.representativeName,
-      founding_date: validatedData.foundingDate,
-      fiscal_year_end_month: validatedData.fiscalYearEndMonth,
-      withholding_tax_type: validatedData.withholdingTaxType,
-      resident_tax_type: validatedData.residentTaxType,
-      contact_email: validatedData.contactEmail
+      representativeName: validatedData.representativeName,
+      foundingDate: validatedData.foundingDate || null,
+      fiscalYearEndMonth: validatedData.fiscalYearEndMonth,
+      withholdingTaxType: validatedData.withholdingTaxType,
+      residentTaxType: validatedData.residentTaxType,
+      contactEmail: validatedData.contactEmail
     };
 
-    await base('Companies').update(companyId, updateFields);
+    await store.updateCompany(companyId, updateFields);
 
     return NextResponse.json({ success: true });
   } catch (error) {

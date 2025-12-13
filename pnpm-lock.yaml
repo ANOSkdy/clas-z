@@ -11,12 +11,18 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.66.1(react@19.2.0))
+      '@neondatabase/serverless':
+        specifier: file:vendor/neon-serverless
+        version: link:vendor/neon-serverless
       airtable:
         specifier: ^0.12.2
         version: 0.12.2
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      dotenv:
+        specifier: file:vendor/dotenv
+        version: link:vendor/dotenv
       googleapis:
         specifier: ^166.0.0
         version: 166.0.0
@@ -335,6 +341,9 @@ packages:
     resolution: {integrity: sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA==}
     peerDependencies:
       react-hook-form: ^7.55.0
+
+  '@neondatabase/serverless@link:vendor/neon-serverless':
+    resolution: {directory: vendor/neon-serverless, type: directory}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -2835,9 +2844,14 @@ packages:
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
+  dotenv@link:vendor/dotenv:
+    resolution: {directory: vendor/dotenv, type: directory}
+
 snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
+
+  '@neondatabase/serverless@link:vendor/neon-serverless': {}
 
   '@aws-crypto/sha256-browser@5.2.0':
     dependencies:
@@ -2854,6 +2868,8 @@ snapshots:
       '@aws-crypto/util': 5.2.0
       '@aws-sdk/types': 3.936.0
       tslib: 2.8.1
+
+  dotenv@link:vendor/dotenv: {}
 
   '@aws-crypto/supports-web-crypto@5.2.0':
     dependencies:

@@ -1,0 +1,6 @@
+{
+  "name": "@neondatabase/serverless",
+  "version": "0.10.4",
+  "main": "index.js",
+  "type": "module"
+}
