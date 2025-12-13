@@ -57,3 +57,23 @@ export function neon(connectionString) {
     return [];
   };
 }
+
+export class Pool {
+  constructor(options = {}) {
+    const { connectionString } = options;
+    if (!connectionString) throw new Error('connectionString is required');
+    this.sql = neon(connectionString);
+  }
+
+  async query(text, params = []) {
+    const rows = await this.sql([text], ...params);
+    return { rows };
+  }
+
+  async connect() {
+    return {
+      query: this.query.bind(this),
+      release() {},
+    };
+  }
+}
