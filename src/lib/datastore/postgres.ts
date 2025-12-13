@@ -1,4 +1,4 @@
-import { Pool } from '@neondatabase/serverless';
+import { Pool } from '../../../vendor/neon-serverless/index.js';
 import type { Company, CompanyInput, DataStore, User, UserRole } from './types';
 
 let pool: Pool | null = null;

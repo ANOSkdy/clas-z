@@ -110,22 +110,20 @@ export const getAirtableStore = (): DataStore => {
 
     async createCompanyForUser(userId, company) {
       const base = ensureBase();
-      const [record] = await base('Companies').create([
-        {
-          fields: {
-            type: company.type,
-            name: company.name,
-            corporate_number: company.corporateNumber || undefined,
-            address: company.address,
-            representative_name: company.representativeName,
-            founding_date: company.foundingDate || undefined,
-            fiscal_year_end_month: company.fiscalYearEndMonth ?? undefined,
-            withholding_tax_type: company.withholdingTaxType,
-            resident_tax_type: company.residentTaxType,
-            contact_email: company.contactEmail,
-          },
+      const record = await (base('Companies') as any).create({
+        fields: {
+          type: company.type,
+          name: company.name,
+          corporate_number: company.corporateNumber || undefined,
+          address: company.address,
+          representative_name: company.representativeName,
+          founding_date: company.foundingDate || undefined,
+          fiscal_year_end_month: company.fiscalYearEndMonth ?? undefined,
+          withholding_tax_type: company.withholdingTaxType,
+          resident_tax_type: company.residentTaxType,
+          contact_email: company.contactEmail,
         },
-      ]);
+      });
 
       const userRecord = await base('Users').find(userId);
       const companies = (userRecord.get('company') as string[] | undefined) ?? [];
@@ -137,7 +135,7 @@ export const getAirtableStore = (): DataStore => {
 
     async updateCompany(companyId, updates) {
       const base = ensureBase();
-      await base('Companies').update(companyId, {
+      await (base('Companies') as any).update(companyId, {
         type: updates.type,
         name: updates.name,
         corporate_number: updates.corporateNumber || undefined,
