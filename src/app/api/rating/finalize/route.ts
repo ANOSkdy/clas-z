@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { getSession } from '@/lib/auth';
-import { getAirtableBase } from '@/lib/airtable';
+import { getDataStore } from '@/lib/datastore';
 import { generateText } from '@/lib/google/gemini';
 import { logger } from '@/lib/logger';
 
@@ -49,12 +49,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'COMPANY_MISMATCH' }, { status: 400 });
   }
 
-  const base = getAirtableBase();
-  if (!base) {
-    logger.error('Airtable base is not configured');
-    return NextResponse.json({ error: 'INTERNAL_SERVER_ERROR' }, { status: 500 });
-  }
-
   try {
     const ratingScore = 85;
     const ratingGrade = deriveGrade(ratingScore);
@@ -73,24 +67,21 @@ export async function POST(request: NextRequest) {
 
     const uploadedAt = new Date().toISOString();
 
-    const [record] = await base('FinancialStatements').create([
-      {
-        fields: {
-          company: [session.companyId],
-          drive_file_id: fileId,
-          rating_score: ratingScore,
-          rating_grade: ratingGrade,
-          rating_comment: ratingComment,
-          uploaded_at: uploadedAt,
-        },
-      },
-    ]);
+    const store = getDataStore();
+    const financialStatementId = await store.createFinancialStatement({
+      companyId: session.companyId,
+      driveFileId: fileId,
+      ratingScore,
+      ratingGrade,
+      ratingComment,
+      uploadedAt,
+    });
 
     return NextResponse.json({
       score: ratingScore,
       grade: ratingGrade,
       comment: ratingComment,
-      financialStatementId: record.id,
+      financialStatementId,
     });
   } catch (error) {
     logger.error('Failed to finalize rating', { err: error });

@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAirtableBase } from '@/lib/airtable';
+import { getDataStore } from '@/lib/datastore';
 import { getSession, signSession } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const base = getAirtableBase();
-  if (!base) return NextResponse.json({ error: 'DB Error' }, { status: 500 });
+  const store = getDataStore();
 
   try {
     const { companyId } = (await request.json()) as { companyId?: string };
@@ -16,18 +15,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'companyId is required' }, { status: 400 });
     }
 
-    const userRecord = await base('Users').find(session.userId);
-    const availableCompanyIds = (userRecord.get('company') as string[] | undefined) ?? [];
+    const userRecord = await store.getUserById(session.userId);
+    const availableCompanyIds = userRecord?.companyIds ?? [];
+
+    if (!userRecord) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
 
     if (!availableCompanyIds.includes(companyId)) {
       return NextResponse.json({ error: 'Forbidden: company not accessible' }, { status: 403 });
     }
 
-    let rawRole = userRecord.get('role');
-    if (Array.isArray(rawRole)) {
-      rawRole = rawRole[0];
-    }
-    const role = (rawRole as 'owner' | 'member' | 'admin') || session.role;
+    const role = userRecord?.role || session.role;
 
     const sessionToken = await signSession({
       userId: session.userId,

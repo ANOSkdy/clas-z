@@ -1,6 +1,6 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
-import { getAirtableBase } from '@/lib/airtable';
+import { getDataStore } from '@/lib/datastore';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,55 +14,39 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const base = getAirtableBase();
-    if (!base) {
-      console.error('[API] Airtable connection failed');
-      return NextResponse.json({ error: 'DB Connection Error' }, { status: 500 });
-    }
+    const store = getDataStore();
+    const company = await store.getCompanyById(session.companyId);
 
-    // 1. 会社IDから会社名を取得
-    let companyName = '';
-    let companyType = '';
-    try {
-      const companyRecord = await base('Companies').find(session.companyId);
-      companyName = companyRecord.get('name') as string;
-      companyType = (companyRecord.get('type') as string) || 'corporation';
-    } catch (e) {
-      console.error('[API] Company Not Found:', e);
+    if (!company) {
+      console.error('[API] Company Not Found:', { companyId: session.companyId });
       return NextResponse.json({ error: 'Company record not found' }, { status: 404 });
     }
 
-    // 2. 未読アラート取得
-    const alertRecords = await base('Alerts').select({
-      filterByFormula: `AND({company} = '${companyName}', {is_read} != 'true')`,
-      sort: [{ field: 'created_at', direction: 'desc' }],
-      maxRecords: 5
-    }).all();
+    const [alerts, schedules] = await Promise.all([
+      store.listAlertsByCompanyId(session.companyId, { limit: 5, unreadOnly: true }),
+      store.listSchedulesByCompanyId(session.companyId, { limit: 5, pendingOnly: true }),
+    ]);
 
-    const alerts = alertRecords.map(rec => ({
-      id: rec.id,
-      title: rec.get('title'),
-      type: rec.get('type') || 'info',
-      date: rec.get('created_at')
+    const companyName = company.name ?? '';
+    const companyType = company.type || 'corporation';
+
+    const mappedAlerts = alerts.map((alert) => ({
+      id: alert.id,
+      title: alert.title,
+      type: alert.type || 'info',
+      date: alert.createdAt,
     }));
 
-    // 3. 直近スケジュール取得
-    const scheduleRecords = await base('Schedules').select({
-      filterByFormula: `AND({company} = '${companyName}', {status} != 'done')`,
-      sort: [{ field: 'due_date', direction: 'asc' }],
-      maxRecords: 5
-    }).all();
-
-    const schedules = scheduleRecords.map(rec => ({
-      id: rec.id,
-      title: rec.get('title'),
-      dueDate: rec.get('due_date')
+    const mappedSchedules = schedules.map((schedule) => ({
+      id: schedule.id,
+      title: schedule.title,
+      dueDate: schedule.dueDate,
     }));
 
     console.log('[API] Home Summary Success. Alerts:', alerts.length, 'Schedules:', schedules.length);
     return NextResponse.json({
-      alerts,
-      schedules,
+      alerts: mappedAlerts,
+      schedules: mappedSchedules,
       company: { name: companyName, type: companyType },
     });
 
