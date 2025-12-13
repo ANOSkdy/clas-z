@@ -51,6 +51,24 @@ export type Schedule = {
   category?: string | null;
 };
 
+export type ManualSection = {
+  id: string;
+  manualId: string | null;
+  companyId: string | null;
+  title: string | null;
+  body: string | null;
+  orderIndex: number | null;
+};
+
+export type MailLogInput = {
+  companyId?: string | null;
+  toEmail?: string | null;
+  subject?: string | null;
+  body?: string | null;
+  status?: string | null;
+  sentAt?: string | null;
+};
+
 export type FinancialStatementInput = {
   companyId: string;
   driveFileId: string;
@@ -76,4 +94,6 @@ export interface DataStore {
     options?: { limit?: number; pendingOnly?: boolean }
   ): Promise<Schedule[]>;
   createFinancialStatement(input: FinancialStatementInput): Promise<string>;
+  listManualSections(companyId: string): Promise<ManualSection[]>;
+  createMailLog(log: MailLogInput): Promise<string>;
 }

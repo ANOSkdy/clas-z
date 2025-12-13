@@ -1,10 +1,14 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { getFileStream } from '@/lib/google/drive';
+import { getSession } from '@/lib/auth';
+import { getDataStore } from '@/lib/datastore';
 
 export async function POST(request: NextRequest) {
   try {
     const { to, subject, body, attachmentFileId } = await request.json();
+    const session = await getSession();
+    const companyId = session?.companyId;
 
     // Nodemailer 設定
     const transporter = nodemailer.createTransport({
@@ -17,7 +21,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const mailOptions: any = {
+    const mailOptions: nodemailer.SendMailOptions = {
       from: process.env.MAIL_FROM_ADDRESS,
       to,
       subject,
@@ -37,14 +41,30 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    let status: string = 'queued';
     if (!process.env.SMTP_USER) {
       console.log('Mock Send:', mailOptions);
-      return NextResponse.json({ success: true, mode: 'mock' });
+      status = 'mock-sent';
+    } else {
+      await transporter.sendMail(mailOptions);
+      status = 'sent';
     }
 
-    await transporter.sendMail(mailOptions);
-    return NextResponse.json({ success: true });
+    try {
+      const store = getDataStore();
+      await store.createMailLog({
+        companyId,
+        toEmail: to,
+        subject,
+        body,
+        status,
+        sentAt: new Date().toISOString(),
+      });
+    } catch (logError) {
+      console.error('[Mail] Failed to persist mail log', logError);
+    }
 
+    return NextResponse.json({ success: true, status });
   } catch (error) {
     console.error('Mail send error:', error);
     return NextResponse.json({ error: 'Failed to send mail' }, { status: 500 });
